@@ -218,7 +218,7 @@ module lua
             import :: c_ptr, c_size_t
             !> Pointer to string
             type(c_ptr), intent(in), value :: str
-            !> String length
+            ! Return value, string length
             integer(c_size_t)              :: c_strlen
         end function c_strlen
     end interface
@@ -268,8 +268,11 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of first value in comparison
             integer(kind=c_int), intent(in), value :: index1
+            !> Index of second value in comparison
             integer(kind=c_int), intent(in), value :: index2
+            !> Comparison operator (one of `LUA_OPEQ`, `LUA_OPLT`, or `LUA_OPLE`)
             integer(kind=c_int), intent(in), value :: op
             ! Return value
             integer(kind=c_int)                    :: lua_compare
@@ -340,6 +343,7 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
             integer(kind=c_int)                    :: lua_iscfunction
@@ -354,6 +358,7 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
             integer(kind=c_int)                    :: lua_isinteger
@@ -367,6 +372,7 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
             integer(kind=c_int)                    :: lua_isnumber
@@ -381,6 +387,7 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
             integer(kind=c_int)                    :: lua_isstring
@@ -394,6 +401,7 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
             integer(kind=c_int)                    :: lua_isuserdata
@@ -532,7 +540,9 @@ module lua
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to convert
             integer(kind=c_int), intent(in), value :: idx
+            !> String length
             type(c_ptr),         intent(in), value :: len
             ! Return value
             type(c_ptr)                            :: lua_tolstring
@@ -659,48 +669,109 @@ module lua
 
         ! Back to Lua C API functions
 
-        !> @brief TBD
+        !> @brief Calls a function in protected mode with the ability to
+        !! yield
+        !!
+        !! Both `nargs` and `nresults` have the same meaning as in
+        !! `lua_call`. If there are no errors during the call,
+        !! `lua_pcallk` behaves exactly like `lua_callk`. However, if
+        !! there is any error, `lua_pcallk` catches it, pushes a single
+        !! value on the stack (the error object), and returns an error
+        !! code. Like `lua_call`, `lua_pcallk` always removes the
+        !! function and its arguments from the stack.
+        !!
+        !! If `msgh` is 0, then the error object returned on the stack
+        !! is exactly the original error object. Otherwise, `msgh` is
+        !! the stack index of a message handler. (This index cannot be a
+        !! pseudo-index.) In case of runtime errors, this function will
+        !! be called with the error object and its return value will be
+        !! the object returned on the stack by `lua_pcallk`.
+        !!
+        !! Typically, the message handler is used to add more debug
+        !! information to the error object, such as a stack traceback.
+        !! Such information cannot be gathered after the return of
+        !! `lua_pcallk`, since by then the stack has unwound.
+        !!
+        !! The `lua_pcallk` function returns one of the following
+        !! constants (defined in `lua.h`):
+        !!   * `LUA_OK` (0): success.
+        !!   * `LUA_ERRRUN`: a runtime error.
+        !!   * `LUA_ERRMEM`: memory allocation error. For such errors,
+        !!     Lua does not call the message handler.
+        !!   * `LUA_ERRERR`: error while running the message handler.
+        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!     For such errors, Lua does not call the message handler
+        !!     (as this kind of error typically has no relation with the
+        !!     function being called).
         !!
         !! C signature: `int lua_pcallk(lua_State *L, int nargs, int nresults, int msgh, lua_KContext ctx, lua_KFunction k)`
         function lua_pcallk(l, nargs, nresults, msgh, ctx, k) bind(c, name='lua_pcallk')
             import :: c_funptr, c_int, c_intptr_t, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),              intent(in), value :: l
+            !> The number of arguments pushed onto the stack
             integer(kind=c_int),      intent(in), value :: nargs
+            !> The maximum number of results to return unless
+            !! `nresults` is `LUA_MULTRET`
             integer(kind=c_int),      intent(in), value :: nresults
+            !> Stack index of the message handler
             integer(kind=c_int),      intent(in), value :: msgh
+            !> The continuation-function context
             integer(kind=c_intptr_t), intent(in), value :: ctx
+            !> Pointer to continuation-function, for handling yield cases
             type(c_funptr),           intent(in), value :: k
             ! Return value
             integer(kind=c_int)                         :: lua_pcallk
         end function lua_pcallk
 
-        !> @brief TBD
+        !> @brief Pushes the string pointed to by `s` with size `len`
+        !! onto the stack.
+        !!
+        !! Lua makes (or reuses) an internal copy of the given string,
+        !! so the memory at `s` can be freed or reused immediately
+        !! after the function returns. The string can contain any
+        !! binary data, including embedded zeros.
+        !!
+        !! Returns a pointer to the internal copy of the string.
         !!
         !! C signature: `const char *lua_pushlstring(lua_State *L, const char *s, size_t len)`
         function lua_pushlstring(l, s, len) bind(c, name='lua_pushlstring')
             import :: c_char, c_ptr, c_size_t
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
+            !> String to push onto stack
             character(kind=c_char), intent(in)        :: s
+            !> String length
             integer(kind=c_size_t), intent(in), value :: len
             ! Return value
             type(c_ptr)                               :: lua_pushlstring
         end function lua_pushlstring
 
-        !> @brief TBD
+        !> @brief Pushes the zero-terminated string pointed to by `s`
+        !! onto the stack.
+        !!
+        !! Lua makes (or reuses) an internal copy of the given string,
+        !! so the memory at `s` can be freed or reused immediately
+        !! after the function returns.
+        !!
+        !! Returns a pointer to the internal copy of the string.
+        !!
+        !! If `s` is `NULL`, pushes `nil` and returns `NULL`.
         !!
         !! C signature: `const char *lua_pushstring(lua_State *L, const char *s)`
         function lua_pushstring(l, s) bind(c, name='lua_pushstring')
             import :: c_char, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
+            !> String to push onto stack
             character(kind=c_char), intent(in)        :: s
             ! Return value
             type(c_ptr)                               :: lua_pushstring
         end function lua_pushstring
 
-        !> @brief TBD
+        !> @brief Pushes the thread represented by `L` onto the stack.
+        !!
+        !! Returns 1 if this thread is the main thread of its state.
         !!
         !! C signature: `int lua_pushthread(lua_State *L)`
         function lua_pushthread(l) bind(c, name='lua_pushthread')
@@ -711,30 +782,91 @@ module lua
             integer(kind=c_int)            :: lua_pushthread
         end function lua_pushthread
 
-        !> @brief TBD
+        !> @brief Performs an arithmetic or bitwise operation over the
+        !! two values (or one, in the case of negations) at the top of
+        !! the stack, with the value at the top being the second
+        !! operand, pops these values, and pushes the result of the
+        !! operation.
+        !!
+        !! The function follows the semantics of the corresponding Lua
+        !! operator (that is, it may call metamethods).
+        !!
+        !! The value of `op` must be one of the following constants:
+        !!   * `LUA_OPADD`: performs addition (`+`)
+        !!   * `LUA_OPSUB`: performs subtraction (`-`)
+        !!   * `LUA_OPMUL`: performs multiplication (`*`)
+        !!   * `LUA_OPDIV`: performs float division (`/`)
+        !!   * `LUA_OPIDIV`: performs floor division (`//`)
+        !!   * `LUA_OPMOD`: performs modulo (`%`)
+        !!   * `LUA_OPPOW`: performs exponentiation (`^`)
+        !!   * `LUA_OPUNM`: performs mathematical negation (unary `-`)
+        !!   * `LUA_OPBNOT`: performs bitwise NOT (`~`)
+        !!   * `LUA_OPBAND`: performs bitwise AND (`&`)
+        !!   * `LUA_OPBOR`: performs bitwise OR (`|`)
+        !!   * `LUA_OPBXOR`: performs bitwise exclusive OR (`~`)
+        !!   * `LUA_OPSHL`: performs left shift (`<<`)
+        !!   * `LUA_OPSHR`: performs right shift (`>>`)
         !!
         !! C signature: `void lua_arith(lua_State *L, int op)`
         subroutine lua_arith(l, op) bind(c, name='lua_arith')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Arithmetic or bitwise operator code
             integer(kind=c_int), intent(in), value :: op
         end subroutine lua_arith
 
-        !> @brief TBD
+        !> @brief Calls a function which may yield
+        !!
+        !! To call a function you must use the following protocol:
+        !!   1) first, the function to be called is pushed onto the
+        !!      stack;
+        !!   2) then, the arguments to the function are pushed in
+        !!      direct order; that is, the first argument is pushed
+        !!      first.
+        !!   3) Finally you call `lua_callk`;
+        !!
+        !! `nargs` is the number of arguments that you pushed onto the
+        !! stack. All arguments and the function value are popped from
+        !! the stack when the function is called. The function results
+        !! are pushed onto the stack when the function returns. The
+        !! number of results is adjusted to `nresults`, unless
+        !! `nresults` is `LUA_MULTRET`. In this case, all results from
+        !! the function are pushed; Lua takes care that the returned
+        !! values fit into the stack space, but it does not ensure any
+        !! extra space in the stack. The function results are pushed
+        !! onto the stack in direct order (the first result is pushed
+        !! first), so that after the call the last result is on the
+        !! top of the stack.
+        !!
+        !! Any error inside the called function is propagated upwards
+        !! (with a longjmp).
         !!
         !! C signature: `void lua_callk(lua_State *L, int nargs, int nresults, int ctx, lua_CFunction k)`
         subroutine lua_callk(l, nargs, nresults, ctx, k) bind(c, name='lua_callk')
             import :: c_funptr, c_int, c_intptr_t, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),              intent(in), value :: l
+            !> Number of arguments pushed onto stack
             integer(kind=c_int),      intent(in), value :: nargs
+            !> Maximum number of results
             integer(kind=c_int),      intent(in), value :: nresults
+            !> The continuation-function context
             integer(kind=c_intptr_t), intent(in), value :: ctx
+            !> Pointer to the continuation-function, for handling yield
+            !! cases
             type(c_funptr),           intent(in), value :: k
         end subroutine lua_callk
 
-        !> @brief TBD
+        !> @brief Destroys all objects in the given Lua state (calling
+        !! the corresponding garbage-collection metamethods, if any) and
+        !! frees all dynamic memory used by this state.
+        !!
+        !! In several platforms, you may not need to call this function,
+        !! because all resources are naturally released when the host
+        !! program ends. On the other hand, long-running programs that
+        !! create multiple states, such as daemons or web servers, will
+        !! probably need to close states as soon as they are not needed.
         !!
         !! C signature: `void lua_close(lua_State *L)`
         subroutine lua_close(l) bind(c, name='lua_close')
@@ -743,39 +875,64 @@ module lua
             type(c_ptr), intent(in), value :: l
         end subroutine lua_close
 
-        !> @brief TBD
+        !> @brief Concatenates the `n` values at the top of the stack,
+        !! pops them, and leaves the result at the top.
+        !!
+        !! If `n` is 1, the result is the single value on the stack
+        !! (that is, the function does nothing); if `n` is 0, the result
+        !! is the empty string. Concatenation is performed following the
+        !! usual semantics of Lua
         !!
         !! C signature: `void lua_concat(lua_State *L, int n)`
         subroutine lua_concat(l, n) bind(c, name='lua_concat')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Number of stack values to concatenate
             integer(kind=c_int), intent(in), value :: n
         end subroutine lua_concat
 
-        !> @brief TBD
+        !> @brief Copies the element at index `fromidx` into the valid
+        !! index `toidx`, replacing the value at that position.
+        !!
+        !! Values at other positions are not affected.
         !!
         !! C signature: `void lua_copy(lua_State *L, int fromidx, int toidx)`
         subroutine lua_copy(l, fromidx, toidx) bind(c, name='lua_copy')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Source element index
             integer(kind=c_int), intent(in), value :: fromidx
+            !> Destination element index
             integer(kind=c_int), intent(in), value :: toidx
         end subroutine lua_copy
 
-        !> @brief TBD
+        !> @brief Creates a new empty table and pushes it onto the
+        !! stack, with hints to preallocate size.
+        !!
+        !! Parameter `narr` is a hint for how many elements the table
+        !! will have as a sequence; parameter `nrec` is a hint for how
+        !! many other elements the table will have. Lua may use these
+        !! hints to preallocate memory for the new table. This
+        !! preallocation is useful for performance when you know in
+        !! advance how many elements the table will have. Otherwise you
+        !! can use the function `lua_newtable`.
         !!
         !! C signature: `void lua_createtable(lua_State *L, int narr, int nrec)`
         subroutine lua_createtable(l, narr, nrec) bind(c, name='lua_creatable')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Hint of number of elements in the table as a sequence
             integer(kind=c_int), intent(in), value :: narr
+            !> Hint of number of other elements in the table
             integer(kind=c_int), intent(in), value :: nrec
         end subroutine lua_createtable
 
-        !> @brief TBD
+        !> @brief Creates a new empty table and pushes it onto the stack.
+        !!
+        !! `lua_newtable(L)` is equivalent to `lua_createtable(L, 0, 0)`.
         !!
         !! C signature: `void lua_newtable(lua_State *L)`
         subroutine lua_newtable(l) bind(c, name='lua_newtable')
@@ -784,48 +941,71 @@ module lua
             type(c_ptr), intent(in), value :: l
         end subroutine lua_newtable
 
-        !> @brief TBD
+        !> @brief Pushes a boolean value with value `b` onto the stack.
         !!
         !! C signature: `void lua_pushboolean(lua_State *L, int b)`
         subroutine lua_pushboolean(l, b) bind(c, name='lua_pushboolean')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Boolean value to push onto the stack
             integer(kind=c_int), intent(in), value :: b
         end subroutine lua_pushboolean
 
-        !> @brief TBD
+        !> @brief Pushes a new C closure onto the stack.
+        !!
+        !! When a C function is created, it is possible to associate
+        !! some values with it, thus creating a C closure; these values
+        !! are then accessible to the function whenever it is called.
+        !! To associate values with a C function, first these values
+        !! must be pushed onto the stack (when there are multiple
+        !! values, the first value is pushed first). Then
+        !! `lua_pushcclosure` is called to create and push the C
+        !! function onto the stack, with the argument `n` telling how
+        !! many values will be associated with the function.
+        !! `lua_pushcclosure` also pops these values from the stack.
         !!
         !! C signature: `void lua_pushcclosure(lua_State *L, lua_CFunction fn, int n)`
         subroutine lua_pushcclosure(l, fn, n) bind(c, name='lua_pushcclosure')
             import :: c_funptr, c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Pointer to C closure function
             type(c_funptr),      intent(in), value :: fn
+            !> Number of values associated with the closure
             integer(kind=c_int), intent(in), value :: n
         end subroutine lua_pushcclosure
 
-        !> @brief TBD
+        !> @brief Pushes an integer with value `n` onto the stack.
         !!
         !! C signature: `void lua_pushinteger(lua_State *L, lua_Integer n)`
         subroutine lua_pushinteger(l, n) bind(c, name='lua_pushinteger')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Integer value to push onto the stack
             integer(kind=c_int), intent(in), value :: n
         end subroutine lua_pushinteger
 
-        !> @brief TBD
+        !> @brief Pushes a light userdata onto the stack.
+        !!
+        !! Userdata represent C values in Lua. A light userdata
+        !! represents a pointer, a `void*`. It is a value (like a
+        !! number): you do not create it, it has no individual
+        !! metatable, and it is not collected (as it was never created).
+        !! A light userdata is equal to "any" light userdata with the
+        !! same C address.
         !!
         !! C signature: `void  lua_pushlightuserdata(lua_State *L, void *p)`
         subroutine lua_pushlightuserdata(l, p) bind(c, name='lua_pushlightuserdata')
             import :: c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
+            !> Pointer representing a light userdata
             type(c_ptr), intent(in), value :: p
         end subroutine lua_pushlightuserdata
 
-        !> @brief TBD
+        !> @brief Pushes a `nil` value onto the stack.
         !!
         !! C signature: `void lua_pushnil(lua_State *L)`
         subroutine lua_pushnil(l) bind(c, name='lua_pushnil')
@@ -834,43 +1014,53 @@ module lua
             type(c_ptr), intent(in), value :: l
         end subroutine lua_pushnil
 
-        !> @brief TBD
+        !> @brief Pushes a float with value `n` onto the stack.
         !!
         !! C signature: `void lua_pushnumber(lua_State *L, lua_Number n)`
         subroutine lua_pushnumber(l, n) bind(c, name='lua_pushnumber')
             import :: c_float, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),        intent(in), value :: l
+            !> Float to push onto the stack
             real(kind=c_float), intent(in), value :: n
         end subroutine lua_pushnumber
 
-        !> @brief TBD
+        !> @brief Pushes a copy of the element at the given index onto the stack.
         !!
         !! C signature: `void  lua_pushvalue(lua_State *L, int idx)`
         subroutine lua_pushvalue(l, idx) bind(c, name='lua_pushvalue')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of element to copy and push onto stack
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_pushvalue
 
-        !> @brief TBD
+        !> @brief Pops a value from the stack and sets it as the new
+        !! value of global `name`.
         !!
         !! C signature: `void lua_setglobal(lua_State *L, const char *name)`
         subroutine lua_setglobal(l, name) bind(c, name='lua_setglobal')
             import :: c_char, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
+            !> New name of popped element
             character(kind=c_char), intent(in)        :: name
         end subroutine lua_setglobal
 
-        !> @brief TBD
+        !> @brief Accepts any index, or 0, and sets the stack top to
+        !! this index.
+        !!
+        !! If the new top is larger than the old one, then the new
+        !! elements are filled with `nil`. If index is 0, then all stack
+        !! elements are removed.
         !!
         !! C signature: `void lua_settop(lua_State *L, int idx)`
         subroutine lua_settop(l, idx) bind(c, name='lua_settop')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index to set as top of the stack
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_settop
 
