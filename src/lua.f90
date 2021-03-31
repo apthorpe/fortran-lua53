@@ -209,10 +209,9 @@ module lua
     integer(kind=c_int), parameter, public :: LUA_ERRERR    = 6
     !!!@}
 
-    !> @name Interfaces to `libc` functions
+    !> @name `libc` function interface
 
     !!!@{
-    !> Interface to C `strlen` function
     interface
         !> Wrapper around C `strlen` function
         function c_strlen(str) bind(c, name='strlen')
@@ -225,10 +224,9 @@ module lua
     end interface
     !!!@}
 
-    !> @name Interfaces to Lua 5.3 functions
+    !> @name Lua 5.3 function interface
 
     !!!@{
-    !> Interfaces to `lua_*()` functions
     interface
         !> @brief Ensures that the stack has space for at least *n* extra
         !! slots (that is, that you can safely push up to *n* values into
@@ -241,11 +239,14 @@ module lua
         !! This function never shrinks the stack; if the stack already
         !! has space for the extra slots, it is left unchanged.
         !!
-        !! `int lua_checkstack(lua_State *L, int n)`
+        !! C signature: `int lua_checkstack(lua_State *L, int n)`
         function lua_checkstack(l, n) bind(c, name='lua_checkstack')
             import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Desired number of stack entries
             integer(kind=c_int), intent(in), value :: n
+            ! Return value
             integer(kind=c_int)                    :: lua_checkstack
         end function lua_checkstack
 
@@ -262,13 +263,15 @@ module lua
         !!  * `LUA_OPLT`: compares for less than (`<`)
         !!  * `LUA_OPLE`: compares for less or equal (`<=`)
         !!
-        !! `int lua_compare(lua_State *L, int index1, int index2, int op)`
+        !! C signature: `int lua_compare(lua_State *L, int index1, int index2, int op)`
         function lua_compare(l, index1, index2, op) bind(c, name='lua_compare')
             import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: index1
             integer(kind=c_int), intent(in), value :: index2
             integer(kind=c_int), intent(in), value :: op
+            ! Return value
             integer(kind=c_int)                    :: lua_compare
         end function lua_compare
 
@@ -287,7 +290,7 @@ module lua
         !!    * `LUA_GCSETSTEPMUL`: sets `data` as the new value for the step multiplier of the collector; function returns the previous value of the step multiplier.
         !!    * `LUA_GCISRUNNING`: returns a boolean that tells whether the collector is running (i.e., not stopped).
         !!
-        !! `int lua_gc(lua_State *L, int what, int data)`
+        !! C signature: `int lua_gc(lua_State *L, int what, int data)`
         function lua_gc(l, what, data) bind(c, name='lua_gc')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -300,9 +303,10 @@ module lua
             integer(kind=c_int)                    :: lua_gc
         end function lua_gc
 
-        !> Pushes onto the stack the value of the global name. Returns the type of that value.
+        !> @brief Pushes onto the stack the value of the global name.
+        !! Returns the type of that value.
         !!
-        !! `int lua_getglobal(lua_State *L, const char *name)`
+        !! C signature: `int lua_getglobal(lua_State *L, const char *name)`
         function lua_getglobal_(l, name) bind(c, name='lua_getglobal')
             import :: c_char, c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -313,152 +317,351 @@ module lua
             integer(kind=c_int)                       :: lua_getglobal_
         end function lua_getglobal_
 
-        ! int lua_gettop(lua_State *L)
+        !> @brief Returns the index of the top element in the stack.
+        !!
+        !! Because indices start at 1, this result is equal to the
+        !! number of elements in the stack; in particular, 0 means an
+        !! empty stack.
+        !!
+        !! C signature: `int lua_gettop(lua_State *L)`
         function lua_gettop(l) bind(c, name='lua_gettop')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
+            ! Return value
             integer(kind=c_int)            :: lua_gettop
         end function lua_gettop
 
-        ! int lua_iscfunction(lua_State *L, int idx)
+        !> @brief Returns 1 if the value at the given index is a
+        !! C function, and 0 otherwise.
+        !!
+        !! C signature: `int lua_iscfunction(lua_State *L, int idx)`
         function lua_iscfunction(l, idx) bind(c, name='lua_iscfunction')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: idx
+            ! Return value
             integer(kind=c_int)                    :: lua_iscfunction
         end function lua_iscfunction
 
-        ! int lua_isinteger(lua_State *L, int idx)
+        !> @brief Returns 1 if the value at the given index is an
+        !! integer (that is, the value is a number and is represented
+        !! as an integer), and 0 otherwise.
+        !!
+        !! C signature: `int lua_isinteger(lua_State *L, int idx)`
         function lua_isinteger(l, idx) bind(c, name='lua_isinteger')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: idx
+            ! Return value
             integer(kind=c_int)                    :: lua_isinteger
         end function lua_isinteger
 
-        ! int lua_isnumber(lua_State *L, int idx)
+        !> @brief Returns 1 if the value at the given index is a number
+        !! or a string convertible to a number, and 0 otherwise.
+        !!
+        !! C signature: `int lua_isnumber(lua_State *L, int idx)`
         function lua_isnumber(l, idx) bind(c, name='lua_isnumber')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: idx
+            ! Return value
             integer(kind=c_int)                    :: lua_isnumber
         end function lua_isnumber
 
-        ! int lua_isstring(lua_State *L, int idx)
+        !> @brief Returns 1 if the value at the given index is a string
+        !! or a number (which is always convertible to a string), and 0
+        !! otherwise.
+        !!
+        !! C signature: `int lua_isstring(lua_State *L, int idx)`
         function lua_isstring(l, idx) bind(c, name='lua_isstring')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: idx
+            ! Return value
             integer(kind=c_int)                    :: lua_isstring
         end function lua_isstring
 
-        ! int lua_isuserdata(lua_State *L, int idx)
+        !> @brief Returns 1 if the value at the given index is a
+        !! userdata (either full or light), and 0 otherwise.
+        !!
+        !! C signature: `int lua_isuserdata(lua_State *L, int idx)`
         function lua_isuserdata(l, idx) bind(c, name='lua_isuserdata')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: idx
+            ! Return value
             integer(kind=c_int)                    :: lua_isuserdata
         end function lua_isuserdata
 
-        ! int lua_isyieldable(lua_State *L)
+        !> @brief Returns 1 if the given coroutine can yield, and 0
+        !! otherwise.
+        !!
+        !! C signature: `int lua_isyieldable(lua_State *L)`
         function lua_isyieldable(l) bind(c, name='lua_isyielable')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
+            ! Return value
             integer(kind=c_int)            :: lua_isyieldable
         end function lua_isyieldable
 
-        ! int lua_load(lua_State *L, lua_Reader reader, void *data, const char *chunkname, const char *mode)
+        !> @brief Loads a Lua chunk without running it.
+        !!
+        !! If there are no errors, `lua_load` pushes the compiled chunk
+        !! as a Lua function on top of the stack. Otherwise, it pushes
+        !! an error message.
+        !!
+        !! The return values of `lua_load` are:
+        !!   * `LUA_OK`: no errors;
+        !!   * `LUA_ERRSYNTAX`: syntax error during precompilation;
+        !!   * `LUA_ERRMEM`: memory allocation (out-of-memory) error;
+        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!     (This error has no relation with the chunk being loaded.
+        !!     It is generated by the garbage collector.)
+        !!
+        !! The `lua_load` function uses a user-supplied reader function
+        !! to read the chunk (see `lua_Reader`). The `data` argument is
+        !! an opaque value passed to the reader function.
+        !!
+        !! The chunkname argument gives a name to the chunk, which is
+        !! used for error messages and in debug information.
+        !!
+        !! `lua_load` automatically detects whether the chunk is text or
+        !! binary and loads it accordingly (see program `luac`). The
+        !! string `mode` works as in function `load`, with the addition
+        !! that a `NULL` value is equivalent to the string "bt".
+        !!
+        !! `lua_load` uses the stack internally, so the reader function
+        !! must always leave the stack unmodified when returning.
+        !!
+        !! If the resulting function has upvalues, its first upvalue is
+        !! set to the value of the global environment stored at index
+        !! `LUA_RIDX_GLOBALS` in the registry. When loading main chunks,
+        !! this upvalue will be the `_ENV` variable. Other upvalues are
+        !! initialized with `nil`.
+        !!
+        !! C signature: `int lua_load(lua_State *L, lua_Reader reader, void *data, const char *chunkname, const char *mode)`
         function lua_load(l, reader, data, chunkname, mode) bind(c, name='lua_load')
             import :: c_char, c_funptr, c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
+            !> Pointer to a user-supplied reader function to read the
+            !! chunk (see `lua_Reader`)
             type(c_funptr),         intent(in), value :: reader
+            !> An opaque value passed to the reader function
             type(c_ptr),            intent(in), value :: data
+            !> Name for the chunk, used for error messages and in debug
+            !! information
             character(kind=c_char), intent(in)        :: chunkname
+            !> Binary/text chunk mode. `mode` works as in function
+            !! `load`, with the addition that a `NULL` value is
+            !! equivalent to the string "bt".
             character(kind=c_char), intent(in)        :: mode
+            ! Return value
             integer(kind=c_int)                       :: lua_load
         end function lua_load
 
-        ! int lua_status(lua_State *L)
+        !> @brief Returns the status of the thread `L`.
+        !!
+        !! The status can be 0 (`LUA_OK`) for a normal thread, an error
+        !! code if the thread finished the execution of a `lua_resume`
+        !! with an error, or `LUA_YIELD` if the thread is suspended.
+        !!
+        !! You can only call functions in threads with status `LUA_OK`.
+        !! You can resume threads with status `LUA_OK` (to start a new
+        !! coroutine) or `LUA_YIELD` (to resume a coroutine).
+        !!
+        !! C signature: `int lua_status(lua_State *L)`
         function lua_status(l) bind(c, name='lua_status')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
+            ! Return value
             integer(kind=c_int)            :: lua_status
         end function lua_status
 
-        ! lua_Integer lua_tointegerx(lua_State *L, int idx, int *isnum)
+        !> @brief Converts the Lua value at the given index to the
+        !! signed integral type `lua_Integer`.
+        !!
+        !! The Lua value must be an integer, or a number or string
+        !! convertible to an integer; otherwise, `lua_tointegerx`
+        !! returns 0.
+        !!
+        !! If `isnum` is not `NULL`, its referent is assigned a
+        !! boolean value that indicates whether the operation succeeded.
+        !!
+        !! C signature: `lua_Integer lua_tointegerx(lua_State *L, int idx, int *isnum)`
         function lua_tointegerx(l, idx, isnum) bind(c, name='lua_tointegerx')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of entry to convert
             integer(kind=c_int), intent(in), value :: idx
+            !> Operation success flag
             type(c_ptr),         intent(in), value :: isnum
+            ! Return value
             integer(kind=c_int)                    :: lua_tointegerx
         end function lua_tointegerx
 
-        ! const char *lua_tolstring(lua_State *L, int idx, size_t *len)
+        !> @brief Converts the Lua value at the given index to a C
+        !! string.
+        !!
+        !! If `len` is not `NULL`, it sets `*len` with the string
+        !! length. The Lua value must be a string or a number;
+        !! otherwise, the function returns `NULL`. If the value is a
+        !! number, then `lua_tolstring` also changes the actual value in
+        !! the stack to a string. (This change confuses `lua_next` when
+        !! `lua_tolstring` is applied to keys during a table traversal.)
+        !!
+        !! `lua_tolstring` returns a pointer to a string inside the Lua
+        !! state. This string always has a zero (`'\0'`) after its last
+        !! character (as in C), but can contain other zeros in its body.
+        !!
+        !! Because Lua has garbage collection, there is no guarantee
+        !! that the pointer returned by `lua_tolstring` will be valid
+        !! after the corresponding Lua value is removed from the stack.
+        !!
+        !! C signature: `const char *lua_tolstring(lua_State *L, int idx, size_t *len)`
         function lua_tolstring(l, idx, len) bind(c, name='lua_tolstring')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             integer(kind=c_int), intent(in), value :: idx
             type(c_ptr),         intent(in), value :: len
+            ! Return value
             type(c_ptr)                            :: lua_tolstring
         end function lua_tolstring
 
-        ! int lua_type(lua_State *L, int idx)
+        !> @brief Returns the type of the value in the given valid
+        !! index, or `LUA_TNONE` for a non-valid (but acceptable) index.
+        !!
+        !! The types returned by `lua_type` are coded by the following
+        !! constants defined in `lua.h`:
+        !!   * `LUA_TNIL` (0),
+        !!   * `LUA_TNUMBER`,
+        !!   * `LUA_TBOOLEAN`,
+        !!   * `LUA_TSTRING`,
+        !!   * `LUA_TTABLE`,
+        !!   * `LUA_TFUNCTION`,
+        !!   * `LUA_TUSERDATA`,
+        !!   * `LUA_TTHREAD`, and
+        !!   * `LUA_TLIGHTUSERDATA`
+        !!
+        !! C signature: `int lua_type(lua_State *L, int idx)`
         function lua_type(l, idx) bind(c, name='lua_type')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Index of entry in stack
             integer(kind=c_int), intent(in), value :: idx
+            ! Return value
             integer(kind=c_int)                    :: lua_type
         end function lua_type
 
-        ! const char *lua_typename(lua_State *L, int tp)
+        !> @brief Returns the name of the type encoded by the value
+        !! `tp`, which must be one the values returned by `lua_type`.
+        !!
+        !! C signature: `const char *lua_typename(lua_State *L, int tp)`
         function lua_typename_(l, tp) bind(c, name='lua_typename')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
+            !> Lua value type code
             integer(kind=c_int), intent(in), value :: tp
+            ! Return value
             type(c_ptr)                            :: lua_typename_
         end function lua_typename_
 
-        ! int luaL_loadfilex(lua_State *L, const char *filename, const char *mode)
+        ! Auxilliary library functions
+
+        !> @brief Loads a file as a Lua chunk.
+        !!
+        !! This function uses `lua_load` to load the chunk in the file
+        !! named `filename`. If `filename` is `NULL`, then it loads from
+        !! the standard input. The first line in the file is ignored if
+        !! it starts with a `#`.
+        !!
+        !! The string mode works as in function `lua_load`.
+        !!
+        !! This function returns the same results as `lua_load`, but it
+        !! has an extra error code `LUA_ERRFILE` for file-related errors
+        !! (e.g., it cannot open or read the file). That is,
+        !!   * `LUA_OK`: no errors;
+        !!   * `LUA_ERRSYNTAX`: syntax error during precompilation;
+        !!   * `LUA_ERRMEM`: memory allocation (out-of-memory) error;
+        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!     (This error has no relation with the chunk being loaded.
+        !!     It is generated by the garbage collector.)
+        !!   * `LUA_ERRFILE`: file-related errors
+        !!
+        !! As `lua_load`, this function only loads the chunk; it does
+        !! not run it.
+        !!
+        !! C signature: `int luaL_loadfilex(lua_State *L, const char *filename, const char *mode)`
         function lual_loadfilex(l, filename, mode) bind(c, name='luaL_loadfilex')
             import :: c_char, c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
+            !> Name of file containing a Lua chunk
             character(kind=c_char), intent(in)        :: filename
+            !> Binary, text, or mixed mode of file (`b`, `t`, or `bt`)
             type(c_ptr),            intent(in), value :: mode
+            ! Return value
             integer(kind=c_int)                       :: lual_loadfilex
         end function lual_loadfilex
 
-        ! int luaL_loadstring (lua_State *L, const char *s)
+        !> @brief Loads a string as a Lua chunk.
+        !!
+        !! This function uses `lua_load` to load the chunk in the
+        !! zero-terminated string `s`.
+        !!
+        !! This function returns the same results as `lua_load`. That is,
+        !!   * `LUA_OK`: no errors;
+        !!   * `LUA_ERRSYNTAX`: syntax error during precompilation;
+        !!   * `LUA_ERRMEM`: memory allocation (out-of-memory) error;
+        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!     (This error has no relation with the chunk being loaded.
+        !!     It is generated by the garbage collector.)
+        !!
+        !! C signature: `int luaL_loadstring (lua_State *L, const char *s)`
         function lual_loadstring_(l, s) bind(c, name='luaL_loadstring')
             import :: c_char, c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
+            !> String containing a Lua chunk
             character(kind=c_char), intent(in)        :: s
+            ! Return value
             integer(kind=c_int)                       :: lual_loadstring_
         end function lual_loadstring_
 
-        ! lua_State *luaL_newstate(void)
+        !>  @brief Creates a new Lua state.
+        !!
+        !! It calls `lua_newstate` with an allocator based on the
+        !! standard C `realloc` function and then sets a panic function
+        !! that prints an error message to the standard error output in
+        !! case of fatal errors.
+        !!
+        !! Returns the new state, or `NULL` if there is a memory
+        !! allocation error.
+        !!
+        !! C signature: `lua_State *luaL_newstate(void)`
         function lual_newstate() bind(c, name='luaL_newstate')
             import :: c_ptr
-            !> Pointer to Lua interpreter state
+            ! Return value, pointer to Lua interpreter state
             type(c_ptr) :: lual_newstate
         end function lual_newstate
 
-        ! int lua_pcallk(lua_State *L, int nargs, int nresults, int msgh, lua_KContext ctx, lua_KFunction k)
+        ! Back to Lua C API functions
+
+        !> @brief TBD
+        !!
+        !! C signature: `int lua_pcallk(lua_State *L, int nargs, int nresults, int msgh, lua_KContext ctx, lua_KFunction k)`
         function lua_pcallk(l, nargs, nresults, msgh, ctx, k) bind(c, name='lua_pcallk')
             import :: c_funptr, c_int, c_intptr_t, c_ptr
             !> Pointer to Lua interpreter state
@@ -468,37 +671,49 @@ module lua
             integer(kind=c_int),      intent(in), value :: msgh
             integer(kind=c_intptr_t), intent(in), value :: ctx
             type(c_funptr),           intent(in), value :: k
+            ! Return value
             integer(kind=c_int)                         :: lua_pcallk
         end function lua_pcallk
 
-        ! const char *lua_pushlstring(lua_State *L, const char *s, size_t len)
+        !> @brief TBD
+        !!
+        !! C signature: `const char *lua_pushlstring(lua_State *L, const char *s, size_t len)`
         function lua_pushlstring(l, s, len) bind(c, name='lua_pushlstring')
             import :: c_char, c_ptr, c_size_t
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
             character(kind=c_char), intent(in)        :: s
             integer(kind=c_size_t), intent(in), value :: len
+            ! Return value
             type(c_ptr)                               :: lua_pushlstring
         end function lua_pushlstring
 
-        ! const char *lua_pushstring(lua_State *L, const char *s)
+        !> @brief TBD
+        !!
+        !! C signature: `const char *lua_pushstring(lua_State *L, const char *s)`
         function lua_pushstring(l, s) bind(c, name='lua_pushstring')
             import :: c_char, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),            intent(in), value :: l
             character(kind=c_char), intent(in)        :: s
+            ! Return value
             type(c_ptr)                               :: lua_pushstring
         end function lua_pushstring
 
-        ! int lua_pushthread(lua_State *L)
+        !> @brief TBD
+        !!
+        !! C signature: `int lua_pushthread(lua_State *L)`
         function lua_pushthread(l) bind(c, name='lua_pushthread')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
+            ! Return value
             integer(kind=c_int)            :: lua_pushthread
         end function lua_pushthread
 
-        ! void lua_arith(lua_State *L, int op)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_arith(lua_State *L, int op)`
         subroutine lua_arith(l, op) bind(c, name='lua_arith')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -506,7 +721,9 @@ module lua
             integer(kind=c_int), intent(in), value :: op
         end subroutine lua_arith
 
-        ! void lua_callk(lua_State *L, int nargs, int nresults, int ctx, lua_CFunction k)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_callk(lua_State *L, int nargs, int nresults, int ctx, lua_CFunction k)`
         subroutine lua_callk(l, nargs, nresults, ctx, k) bind(c, name='lua_callk')
             import :: c_funptr, c_int, c_intptr_t, c_ptr
             !> Pointer to Lua interpreter state
@@ -517,14 +734,18 @@ module lua
             type(c_funptr),           intent(in), value :: k
         end subroutine lua_callk
 
-        ! void lua_close(lua_State *L)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_close(lua_State *L)`
         subroutine lua_close(l) bind(c, name='lua_close')
             import :: c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
         end subroutine lua_close
 
-        ! void lua_concat(lua_State *L, int n)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_concat(lua_State *L, int n)`
         subroutine lua_concat(l, n) bind(c, name='lua_concat')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -532,7 +753,9 @@ module lua
             integer(kind=c_int), intent(in), value :: n
         end subroutine lua_concat
 
-        ! void lua_copy(lua_State *L, int fromidx, int toidx)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_copy(lua_State *L, int fromidx, int toidx)`
         subroutine lua_copy(l, fromidx, toidx) bind(c, name='lua_copy')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -541,7 +764,9 @@ module lua
             integer(kind=c_int), intent(in), value :: toidx
         end subroutine lua_copy
 
-        ! void lua_createtable(lua_State *L, int narr, int nrec)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_createtable(lua_State *L, int narr, int nrec)`
         subroutine lua_createtable(l, narr, nrec) bind(c, name='lua_creatable')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -550,14 +775,18 @@ module lua
             integer(kind=c_int), intent(in), value :: nrec
         end subroutine lua_createtable
 
-        ! void lua_newtable(lua_State *L)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_newtable(lua_State *L)`
         subroutine lua_newtable(l) bind(c, name='lua_newtable')
             import :: c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
         end subroutine lua_newtable
 
-        ! void lua_pushboolean(lua_State *L, int b)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_pushboolean(lua_State *L, int b)`
         subroutine lua_pushboolean(l, b) bind(c, name='lua_pushboolean')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -565,7 +794,9 @@ module lua
             integer(kind=c_int), intent(in), value :: b
         end subroutine lua_pushboolean
 
-        ! void lua_pushcclosure(lua_State *L, lua_CFunction fn, int n)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_pushcclosure(lua_State *L, lua_CFunction fn, int n)`
         subroutine lua_pushcclosure(l, fn, n) bind(c, name='lua_pushcclosure')
             import :: c_funptr, c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -574,7 +805,9 @@ module lua
             integer(kind=c_int), intent(in), value :: n
         end subroutine lua_pushcclosure
 
-        ! void lua_pushinteger(lua_State *L, lua_Integer n)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_pushinteger(lua_State *L, lua_Integer n)`
         subroutine lua_pushinteger(l, n) bind(c, name='lua_pushinteger')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -582,7 +815,9 @@ module lua
             integer(kind=c_int), intent(in), value :: n
         end subroutine lua_pushinteger
 
-        ! void  lua_pushlightuserdata(lua_State *L, void *p)
+        !> @brief TBD
+        !!
+        !! C signature: `void  lua_pushlightuserdata(lua_State *L, void *p)`
         subroutine lua_pushlightuserdata(l, p) bind(c, name='lua_pushlightuserdata')
             import :: c_ptr
             !> Pointer to Lua interpreter state
@@ -590,14 +825,18 @@ module lua
             type(c_ptr), intent(in), value :: p
         end subroutine lua_pushlightuserdata
 
-        ! void lua_pushnil(lua_State *L)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_pushnil(lua_State *L)`
         subroutine lua_pushnil(l) bind(c, name='lua_pushnil')
             import :: c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
         end subroutine lua_pushnil
 
-        ! void lua_pushnumber(lua_State *L, lua_Number n)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_pushnumber(lua_State *L, lua_Number n)`
         subroutine lua_pushnumber(l, n) bind(c, name='lua_pushnumber')
             import :: c_float, c_ptr
             !> Pointer to Lua interpreter state
@@ -605,7 +844,9 @@ module lua
             real(kind=c_float), intent(in), value :: n
         end subroutine lua_pushnumber
 
-        ! void  lua_pushvalue(lua_State *L, int idx)
+        !> @brief TBD
+        !!
+        !! C signature: `void  lua_pushvalue(lua_State *L, int idx)`
         subroutine lua_pushvalue(l, idx) bind(c, name='lua_pushvalue')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -613,7 +854,9 @@ module lua
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_pushvalue
 
-        ! void lua_setglobal(lua_State *L, const char *name)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_setglobal(lua_State *L, const char *name)`
         subroutine lua_setglobal(l, name) bind(c, name='lua_setglobal')
             import :: c_char, c_ptr
             !> Pointer to Lua interpreter state
@@ -621,7 +864,9 @@ module lua
             character(kind=c_char), intent(in)        :: name
         end subroutine lua_setglobal
 
-        ! void lua_settop(lua_State *L, int idx)
+        !> @brief TBD
+        !!
+        !! C signature: `void lua_settop(lua_State *L, int idx)`
         subroutine lua_settop(l, idx) bind(c, name='lua_settop')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
@@ -629,7 +874,11 @@ module lua
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_settop
 
-        ! void luaL_openlibs(lua_State *L)
+        ! Auxilliary library function
+
+        !> @brief Opens all standard Lua libraries into the given state.
+        !!
+        !! C signature: `void luaL_openlibs(lua_State *L)`
         subroutine lual_openlibs(l) bind(c, name='luaL_openlibs')
             import :: c_ptr
             !> Pointer to Lua interpreter state
@@ -875,10 +1124,11 @@ contains
         lual_loadfile = lual_loadfilex(l, fn // c_null_char, c_null_ptr)
     end function lual_loadfile
 
-    ! int luaL_loadstring(lua_State *L, const char *s)
+    !> Wrapper for `lual_loadstring()` that null-terminates the given
+    !! string.
+    !!
+    !! `int luaL_loadstring(lua_State *L, const char *s)`
     function lual_loadstring(l, s)
-        !! Wrapper for `lual_loadstring()` that null-terminates the given
-        !! string.
 
         !> Pointer to Lua interpreter state
         type(c_ptr),      intent(in) :: l
@@ -919,12 +1169,16 @@ contains
         call lua_pushcclosure(l, f, 0)
     end subroutine lua_pushcfunction
 
-    ! void lua_register(lua_State *L, const char *name, lua_CFunction f)
+    !> @brief Sets the C function f as the new value of global `name`.
+    !!
+    !! `void lua_register(lua_State *L, const char *name, lua_CFunction f)`
     subroutine lua_register(l, n, f)
 
         !> Pointer to Lua interpreter state
         type(c_ptr),      intent(in) :: l
+        !> Name for registering function `f`
         character(len=*), intent(in) :: n
+        !> Pointer to function
         type(c_funptr),   intent(in) :: f
 
         call lua_pushcfunction(l, f)
