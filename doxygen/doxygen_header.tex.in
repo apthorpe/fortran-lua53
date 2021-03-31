@@ -39,7 +39,7 @@
 \usepackage{mathtools} %A
 \usepackage[version=3]{mhchem}
 \usepackage{makeidx}
-\usepackage[columns=1]{idxlayout}
+\usepackage[columns=2]{idxlayout}
 \usepackage{multicol}
 \usepackage{multirow}
 %\usepackage[nomentbl,stdsubgroups,nocfg]{nomencl}
