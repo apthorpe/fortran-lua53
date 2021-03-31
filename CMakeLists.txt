@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.17)
 # Needed since 3.19.4; not sure why...
 cmake_policy(SET CMP0053 NEW)
 
+# Needed since 3.20.0 to work around warnings from TOAST
+cmake_policy(SET CMP0048 NEW)
+
 # Append local CMake module directory
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -44,7 +47,7 @@ project(FORTRANLUA53
 ## Options ####################################################################
 ###############################################################################
 
-# Set fortran compiler with environment variable FC or CMake option
+# Set Fortran compiler with environment variable FC or CMake option
 # -D CMAKE_Fortran_COMPILER
 
 # Set C compiler with environment variable CC or CMake option
@@ -60,7 +63,7 @@ option(ENABLE_COVERAGE "Enable coverage build." OFF)
 
 # Unit tests are disabled by default; enable with CMake option
 # -D ENABLE_UNIT_TESTS:BOOL=ON
-option(ENABLE_UNIT_TESTS "Enable unit tests." ON)
+option(ENABLE_UNIT_TESTS "Enable unit tests." OFF)
 
 # TOAST library search directories
 set(TOAST_ROOT "" CACHE PATH "Installation root of TOAST library")
