@@ -113,14 +113,14 @@ include(IncludeLua53)
 ## Build ######################################################################
 ###############################################################################
 
-# unset(CCOPTS)
+unset(CCOPTS)
 
-# list(APPEND CCOPTS
-#     ${CCOPT_WALL}
-#     ${CCOPT_DEBUG}
-# )
+list(APPEND CCOPTS
+    ${CCOPT_WALL}
+    ${CCOPT_DEBUG}
+)
 
-# message(STATUS "C compiler options for Fortran-Lua53 set to ${FCOPTS}")
+message(STATUS "C compiler options for Fortran-Lua53 set to ${FCOPTS}")
 
 unset(FCOPTS)
 
@@ -204,6 +204,9 @@ add_library(${LIBLUA53_NAME}
     ${LIBLUA53_LIB_SOURCES}
 )
 
+target_compile_options(${LIBLUA53_NAME} PUBLIC ${CCOPTS})
+target_link_libraries(${LIBLUA53_NAME} PUBLIC m)
+
 set_target_properties(${LIBLUA53_NAME}
     PROPERTIES
     # OUTPUT_NAME lua
@@ -226,6 +229,7 @@ add_executable(${LUAC53_NAME}
     ${LUAC53_SOURCES}
 )
 
+target_compile_options(${LIBLUA53_NAME} PUBLIC ${CCOPTS})
 target_include_directories(${LUAC53_NAME} PUBLIC ${LIBLUA53_SOURCE_DIR})
 target_link_libraries(${LUAC53_NAME} PUBLIC ${LIBLUA53_NAME})
 
@@ -251,6 +255,7 @@ add_executable(${LUATERP53_NAME}
     ${LUATERP53_SOURCES}
 )
 
+target_compile_options(${LIBLUA53_NAME} PUBLIC ${CCOPTS})
 target_include_directories(${LUATERP53_NAME} PUBLIC ${LIBLUA53_SOURCE_DIR})
 target_link_libraries(${LUATERP53_NAME} PUBLIC ${LIBLUA53_NAME})
 
@@ -286,12 +291,12 @@ set(FORTRANLUA53_SOURCES
     "${FORTRANLUA53_SOURCE_DIR}/lua.f90"
 )
 
-# Apply FCOPTS only to Fortran source files
-set_source_files_properties(
-    ${FORTRANLUA53_SOURCES}
-    PROPERTIES
-    COMPILE_OPTIONS "${FCOPTS}"
-)
+# # Apply FCOPTS only to Fortran source files
+# set_source_files_properties(
+#     ${FORTRANLUA53_SOURCES}
+#     PROPERTIES
+#     COMPILE_OPTIONS "${FCOPTS}"
+# )
 
 # # Define C sources for fortran-lua53 library
 # set(FORTRANLUA53_DEP_C_SOURCES
@@ -309,7 +314,9 @@ set_source_files_properties(
 # Define FORTRANLUA53 library artifact
 set(FORTRANLUA53LIB_FORTRAN_MODULE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${FORTRANLUA53LIB_NAME}_include")
 file(MAKE_DIRECTORY "${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}")
+
 add_library(${FORTRANLUA53LIB_NAME} ${FORTRANLUA53_SOURCES})
+target_compile_options(${FORTRANLUA53LIB_NAME} PUBLIC ${FCOPTS})
 target_include_directories(${FORTRANLUA53LIB_NAME} PUBLIC ${FORTRANLUA53_SOURCE_DIR})
 target_link_libraries(${FORTRANLUA53LIB_NAME} PUBLIC ${LIBLUA53_NAME})
 
@@ -353,6 +360,7 @@ set(FIBONACCI_SOURCES
 )
 
 add_executable(${FIBONACCI_NAME} ${FIBONACCI_SOURCES})
+target_compile_options(${FIBONACCI_NAME} PUBLIC ${FCOPTS})
 target_link_libraries(${FIBONACCI_NAME} ${LIBLUA53_NAME})
 link_fortran_libraries(${FIBONACCI_NAME} ${FORTRANLUA53LIB_NAME})
 
@@ -393,6 +401,7 @@ set(XSTRING_SOURCES
 )
 
 add_executable(${XSTRING_NAME} ${XSTRING_SOURCES})
+target_compile_options(${FIBONACCI_NAME} PUBLIC ${FCOPTS})
 target_link_libraries(${XSTRING_NAME} ${LIBLUA53_NAME})
 link_fortran_libraries(${XSTRING_NAME} ${FORTRANLUA53LIB_NAME})
 
