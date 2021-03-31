@@ -1,0 +1,574 @@
+% Latex header for doxygen 1.8.18
+\let\mypdfximage\pdfximage\def\pdfximage{\immediate\mypdfximage}
+%ORIG \documentclass[twoside]{book}
+%DRAFT \documentclass[titlepage,letterpaper,11pt,draft]{report}
+%PRODUCTION
+\documentclass[titlepage,letterpaper,11pt]{report}
+
+%%%%% START OF DOCUMENT PREAMBLE %%%%%
+
+%% moved from doxygen.sty due to workaround for LaTex 2019 version and unmaintained tabu package
+\usepackage{ifthen}
+\ifx\requestedLaTeXdate\undefined
+\usepackage{array}
+\else
+\usepackage{array}[=2016-10-06]
+\fi
+%%
+% Packages required by doxygen
+\usepackage{amsmath}
+% \usepackage{fixltx2e}
+\usepackage{booktabs} %A
+%z \usepackage{cancel}
+\usepackage{color} %A
+\usepackage{geometry}
+\usepackage{calc}
+\usepackage{enumitem}
+% \usepackage{eqexpl} \eqexplSetDelim{=}
+\usepackage{fancybox} %A
+\usepackage{fancyvrb} %A
+\usepackage{fancyhdr} \pagestyle{fancy}
+%DOXYGEN \usepackage{fancyhdr} \pagestyle{fancyplain}
+\usepackage{doxygen}
+\usepackage{adjustbox} % also loads graphicx
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+% \usepackage{listings}
+\usepackage{lastpage}
+%z \usepackage{longtable}
+\usepackage{mathtools} %A
+\usepackage[version=3]{mhchem}
+\usepackage{makeidx}
+\usepackage[columns=1]{idxlayout}
+\usepackage{multicol}
+\usepackage{multirow}
+%\usepackage[nomentbl,stdsubgroups,nocfg]{nomencl}
+\usepackage[nocfg,intoc,english]{nomencl}
+\PassOptionsToPackage{warn}{textcomp}
+%\usepackage{textcomp}
+\usepackage[redefsymbols,decimalsymbol={.}]{siunitx} %A
+\usepackage{setspace} %A
+\usepackage{tabularx} %A
+\usepackage[rm]{titlesec} %A
+
+\usepackage{tikz}
+\usepackage[framemethod=tikz]{mdframed}
+
+\usepackage[table]{xcolor}
+\usepackage{ifpdf}
+\usepackage{ifxetex}
+
+\usepackage{sectsty}
+\usepackage{amssymb}
+
+% Font selection
+\usepackage{fontspec}
+%needed? \usepackage[T1]{fontenc}
+\usepackage{anyfontsize}
+\usepackage{microtype}
+
+% Font family: wasy
+%needed?
+\usepackage[nointegrals]{wasysym}
+
+% newtxtext and newtxmath may fix broken UTF8 characters in .bib entries
+% Font families: ntxsups, ntxtlf, ntxtt - can't disambiguate to one package :(
+%needed? \usepackage{newtxtext, newtxmath}
+
+% Font family: qhv
+% Might as well force this - never should need a sans serif family...
+% \usepackage{tgheros}
+
+% Font family: zi4
+\usepackage{inconsolata}
+
+% Why does 'setmathfont' give 'undefined control sequence'?
+% \setmathfont[range=\mathtt]{inconsolata}
+
+% Font family: qpl
+\usepackage{tgpagella}
+
+% Q: Should I change the family default or use setXXXXfont
+% \renewcommand{\sfdefault}{qhv}
+% \renewcommand{\rmdefault}{qpl}
+% \renewcommand{\ttdefault}{inconsolata}
+
+% What does this do? Sets default family to sans serif (sffamily)
+% which is probably not what I want
+% \renewcommand{\familydefault}{\sfdefault}
+
+% Sets default font family to serif (rmdefault)
+% \renewcommand{\familydefault}{\rmdefault}
+
+% TODO Find someone in the LaTeX community who can explain how
+% fonts _should_ be specified. This is just nonsense.
+
+% Ok under local TeXLive, breaks under CI
+%ok \setmainfont{TeX Gyre Pagella}
+% Specify by filename when using xelatex
+\setmainfont{texgyrepagella-regular.otf}
+% Breaks under local TeXLive on Windows, ok under CI
+% \setmainfont{TeXGyrePagella}
+
+%ok \setmonofont[Scale=MatchLowercase]{inconsolata}
+% Specify by filename when using xelatex
+\setmonofont[Scale=MatchLowercase]{InconsolataN-Regular.otf}
+
+% Add conditions environment for defining terms of equations (where x = ...)
+% See https://tex.stackexchange.com/a/95842/6641 from
+% https://tex.stackexchange.com/questions/95838/how-to-write-a-perfect-equation-parameters-description
+\newlength{\conditionwd}
+\newenvironment{conditions}[1][where:]
+  {%
+   #1\tabularx{\textwidth-\widthof{#1}}[t]{
+     >{$}l<{$} @{${}={}$} X@{}
+   }%
+  }
+  {\endtabularx\\[\belowdisplayskip]}
+
+% What does this do?
+\allsectionsfont{%
+  \fontseries{b}\selectfont%
+%  \fontseries{bc}\selectfont%
+%  \color{darkgray}%
+}
+
+% What does this do?
+\renewcommand{\DoxyLabelFont}{%
+  \fontseries{b}\selectfont%
+%  \fontseries{bc}\selectfont%
+%  \color{darkgray}%
+}
+
+\newcommand{\+}{\discretionary{\mbox{\scriptsize$\hookleftarrow$}}{}{}}
+
+% Arguments of doxygenemoji:
+% 1) ':<text>:' form of the emoji, already "LaTeX"-escaped
+% 2) file with the name of the emoji without the .png extension
+% in case image exist use this otherwise use the ':<text>:' form
+\newcommand{\doxygenemoji}[2]{%
+  \IfFileExists{./#2.png}{\raisebox{-0.1em}{\includegraphics[height=0.9em]{./#2.png}}}{#1}%
+}
+
+% % Code listing format - number kerning is weird...
+% \lstset{
+%   basicstyle=\ttfamily,
+%   breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+%   breaklines=false,                % sets automatic line breaking
+%   captionpos=b,                    % sets the caption-position to bottom
+% %  commentstyle=\color{green},      % comment style
+%   extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+%   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+% %  keywordstyle=\color{blue},       % keyword style
+%   language=[95]Fortran,            % the language of the code
+%   numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+%   numbersep=5pt,                   % how far the line-numbers are from the code
+%   numberstyle=\tiny,   % the style that is used for the line-numbers
+% %  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+%   showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+%   showstringspaces=false,          % underline spaces within strings only
+%   showtabs=false,                  % show tabs within strings adding particular underscores
+%   stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+% %  stringstyle=\color{mymauve},     % string literal style
+%   tabsize=4,                       % sets default tabsize to 2 spaces
+%   title=\lstname                   % show the filename of files
+% %  morecomment=[l]{!\ }% Comment only with space after !
+% }
+
+% Page & text layout
+
+% Title page:
+% These are the dimensions I want for title page "body"
+%% \geometry{top=1.5in, left=1.75in, right=1.75in, bottom=1in}
+% These are hacked to put the headers where headers ought to go
+%ORIGOK \geometry{top=1.25in, left=1.75in, right=1.75in, bottom=1.25in}
+\geometry{top=1.0in, left=1.75in, right=1.75in, bottom=1.25in}
+\savegeometry{titlepage}
+
+% Nominal body pages:
+\geometry{margin=1in}
+\savegeometry{body}
+
+\fancypagestyle{titlepage}{
+  %Set header dimensions. This doesn't seem to do anything here either
+%  \setlength{\headheight}{1.5in}
+%  \setlength{\headwidth}{8.5in}
+
+%a  \setlength{\footskip}{1in}
+
+  %invoke title page geometry by name
+  \loadgeometry{titlepage}
+
+  % Set header dimensions. This doesn't seem to do anything to the width but
+  % pushes the title off the header. It's a start.
+  \setlength{\headheight}{1.5in}
+  % This is apparently a cruel joke
+  \setlength{\footskip}{0.5in}
+%  \setlength{\headwidth}{8.5in}
+  \fancyhfoffset{1.75in}
+
+  % Set header and footer images
+  \fancyhead{}
+  %% Original image size is 712 x 78
+%  \chead{\includegraphics[resolution=96,keepaspectratio,height=0.8125in]{../_img/title_head}}
+  \fancyhead[C]{
+% \REPORTPROPRIETARY{} \\
+%  \includegraphics[resolution=96,keepaspectratio,height=0.8125in]{\stockimgpath/title_head}
+%OK-supply-image  \includegraphics[keepaspectratio,height=0.8125in]{title_head}
+  }
+  \renewcommand\headrulewidth{0pt}
+
+  \fancyfoot{}
+  %% Original size image is 628 x 29
+%  \fancyfoot[C]{
+%  \cfoot{\includegraphics[resolution=96,keepaspectratio,width=6.541667in]{../_img/title_foot}}
+%  \cfoot{\includegraphics[resolution=96,keepaspectratio,width=6.541667in]{\stockimgpath/title_foot}}
+%OK-supply-image  \cfoot{\includegraphics[keepaspectratio,width=6.541667in]{title_foot}}
+%  }
+  \renewcommand\footrulewidth{0pt}
+}
+\tolerance=750
+\hfuzz=15pt
+\hbadness=750
+\setlength{\emergencystretch}{15pt}
+\setlength{\parindent}{0cm}
+\newcommand{\doxynormalparskip}{\setlength{\parskip}{3ex plus 2ex minus 2ex}}
+\newcommand{\doxytocparskip}{\setlength{\parskip}{1ex plus 0ex minus 0ex}}
+\doxynormalparskip
+\makeatletter
+
+\renewcommand{\paragraph}{%
+  \@startsection{paragraph}{4}{0ex}{-1.0ex}{1.0ex}{%
+    \normalfont\normalsize\bfseries\SS@parafont%
+  }%
+}
+\renewcommand{\subparagraph}{%
+  \@startsection{subparagraph}{5}{0ex}{-1.0ex}{1.0ex}{%
+    \normalfont\normalsize\bfseries\SS@subparafont%
+  }%
+}
+\makeatother
+
+\makeatletter
+\newcommand\hrulefilll{\leavevmode\leaders\hrule\hskip 0pt plus 1filll\kern\z@}
+\makeatother
+
+% Headers & footers
+% \usepackage{fancyhdr}
+% \pagestyle{fancyplain}
+% \fancyhead[LE]{\fancyplain{}{\bfseries\thepage}}
+% \fancyhead[CE]{\fancyplain{}{}}
+% \fancyhead[RE]{\fancyplain{}{\bfseries\leftmark}}
+% \fancyhead[LO]{\fancyplain{}{\bfseries\rightmark}}
+% \fancyhead[CO]{\fancyplain{}{}}
+% \fancyhead[RO]{\fancyplain{}{\bfseries\thepage}}
+% \fancyfoot[LE]{\fancyplain{}{}}
+% \fancyfoot[CE]{\fancyplain{}{}}
+% \fancyfoot[RE]{\fancyplain{}{\bfseries\scriptsize Generated by Doxygen }}
+% \fancyfoot[LO]{\fancyplain{}{\bfseries\scriptsize Generated by Doxygen }}
+% \fancyfoot[CO]{\fancyplain{}{}}
+% \fancyfoot[RO]{\fancyplain{}{}}
+% \renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\chaptermark}[1]{%
+  \markboth{#1}{}%
+}
+\renewcommand{\sectionmark}[1]{%
+  \markright{\thesection\ #1}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set normal header contents
+
+\setlength{\headheight}{72pt}
+\fancyhead{}
+\lhead{\REPORTNUMBER{} \\ Rev. \REPORTREVISION{}}
+\chead{\textbf{\textit{\REPORTSTATUS{}}} \\ }
+% Uncomment PRODUCTION line for final; disabling LastPage greatly speeds drafts
+%PRODUCTION
+\rhead{Page \thepage\ of \pageref{LastPage} \\ \REPORTMONTH{}, \REPORTYYYY{}}
+%DRAFT \rhead{Page \thepage\ of TBD \\ \REPORTMONTH{}, \REPORTYYYY{}}
+\renewcommand\headrulewidth{0pt}
+
+\fancyfoot{}
+\cfoot{\REPORTPROPRIETARY{}}
+\renewcommand\footrulewidth{0pt}
+
+% 3.a Set ToC, LoF, LoT page headers and footers
+\fancypagestyle{plain}{
+  \fancyfoot{}
+  \cfoot{\REPORTPROPRIETARY{}}
+  \renewcommand\footrulewidth{0pt}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Doxygen
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Indices & bibliography
+\usepackage{natbib}
+\bibliographystyle{abbrvnat}
+\setcitestyle{authoryear,open={(},close={)}}
+
+\usepackage[titles]{tocloft}
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{5}
+\makeindex
+
+\usepackage{newunicodechar}
+  \newunicodechar{⁻}{${}^{-}$}% Superscript minus
+  \newunicodechar{²}{${}^{2}$}% Superscript two
+  \newunicodechar{³}{${}^{3}$}% Superscript three
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Adjust how SI unit translator behaves (siunitx)
+\sisetup{output-decimal-marker=\textrm{.}}% Works around Adobe colon issue
+\sisetup{per-mode=symbol-or-fraction}%
+% Import custom units (use \input; \include doesn't work in the preamble)
+\input{siunitx_custom_units.tex}
+
+% Shortcut for script-L (Laplacian, Lagrangian, radiation interchange factor, ...)
+\DeclareMathOperator{\Lscript}{\mathcal{L}}
+
+% Define standard colors
+
+\definecolor{AcorvidBlue}{HTML}{3333CC}
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{mediumgray}{gray}{0.7}
+
+% Hyperlinks (required, but should be loaded last)
+\definecolor{NavyBlue}{HTML}{000080}
+\ifpdf
+  \usepackage[pdftex,pagebackref=true]{hyperref}
+\else
+  \ifxetex
+    \usepackage[pagebackref=true]{hyperref}
+  \else
+    \usepackage[ps2pdf,pagebackref=true]{hyperref}
+  \fi
+\fi
+
+\hypersetup{%
+  colorlinks=true,%
+  linkcolor=black,%
+  citecolor=black,%
+  urlcolor=NavyBlue,%
+  unicode%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set report metadata
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\CODENAME}{@CPACK_PACKAGE_NAME@}
+\newcommand{\CODEVERSION}{@CPACK_PACKAGE_VERSION@}
+\newcommand{\REPORTMONTH}{@DOCUMENT_MONTH@}
+\newcommand{\REPORTDAY}{@DOCUMENT_DAY@}
+\newcommand{\REPORTYYYY}{@DOCUMENT_YYYY@}
+
+\input{manual_metadata}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Define common structures/environments
+
+\newmdenv[
+  linecolor=AcorvidBlue,
+  linewidth=0.75pt,
+  skipabove=1pt,
+  skipbelow=1pt,
+  leftmargin=1pt,
+  rightmargin=1pt,
+  innertopmargin=8pt,
+  innerbottommargin=0pt,
+  innerleftmargin=8pt,
+  innerrightmargin=8pt]{titleboxinner}
+%innerbottommargin=0pt,
+\newmdenv[
+  linecolor=AcorvidBlue,
+  linewidth=4.5pt,
+  innertopmargin=13pt,
+  innerbottommargin=2pt,
+  innerleftmargin=1pt,
+  innerrightmargin=1pt]{titleboxouter}
+%inner*margins were 1pt
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Custom commands
+\newcommand{\clearemptydoublepage}{%
+  \newpage{\pagestyle{empty}\cleardoublepage}%
+}
+
+% Set table/figure caption format
+\usepackage{caption}
+\captionsetup{labelsep=space,justification=centering,font={bf},singlelinecheck=off,skip=4pt,position=top}
+
+\usepackage{etoc}
+\etocsettocstyle{\doxytocparskip}{\doxynormalparskip}
+\renewcommand{\numberline}[1]{#1~}
+
+% Use 'clever' referencing to point at \part as well as \chapter, etc.
+% This must be loaded after everything else, at least after hyperref anyway
+\usepackage{cleveref}
+
+% Create nomenclature section
+
+\makenomenclature
+
+% Diagnostics for chasing down the inevitable baffling failure
+% \listfiles
+
+%===== C O N T E N T S =====
+
+\begin{document}
+
+% Titlepage & ToC
+\hypersetup{
+  pageanchor=false,
+  bookmarksnumbered=true,
+  pdfencoding=unicode
+}
+%D \pagenumbering{alph}
+\begin{titlepage}
+  \loadgeometry{titlepage}
+  \thispagestyle{titlepage}
+
+  \begin{titleboxouter}
+    \vspace{1mm} % Forces a gap at top
+    \begin{titleboxinner}
+      \begin{center}
+        \begin{spacing}{1.2}
+          \textbf{\Large{Report No.: \REPORTNUMBER{}, Rev. \REPORTREVISION{} }} \\
+          \vspace{4mm}
+          \textbf{\textit{\Large{\REPORTTITLE{} }}} \\
+          \vspace{2mm}
+          \textbf{\Large{Project No.: \PROJECTNUMBER{} }}%
+        \end{spacing}
+      \end{center}
+    \end{titleboxinner}
+  \end{titleboxouter}
+
+  \vspace{0.15in}
+
+  \begin{center}
+    \textbf{\textit{\Large{ \REPORTSTATUS{} }}}%
+  \end{center}
+
+  \vspace{1.0in}
+
+%  \vspace{0.15in}
+%
+%  \begin{center}
+%    \begin{spacing}{1.2}
+%      \begin{myCambria}
+%        \textbf{\Large{Submitted to:} } \\
+%        \textbf{\textit{\Large{\PROJECTCLIENT{} \\
+%                               \PROJECTTITLE{} \\
+%                               \vspace{2mm}
+%                               \PROJECTLOCATION{} }}}
+%      \end{myCambria}
+%    \end{spacing}
+%  \end{center}
+%
+%  \vspace{0.1in}
+
+  \begin{center}
+    \begin{spacing}{1.2}
+      \textbf{\Large{Prepared by:} } \\
+      \textbf{\textit{\Large{
+      \AUTHORA{} % \\
+%      \AUTHORB{} % \\
+%        \vspace{2mm}
+%        \AUTHORC{}
+    }}}
+    \end{spacing}
+  \end{center}
+
+%   \vspace{0.1in}
+%
+%   \begin{center}
+%     \begin{spacing}{1.2}
+%       \textbf{\Large{Reviewed by:} } \\
+%       \textbf{\textit{\Large{
+%         \VERIFIERA{} % \\
+% %        \vspace{2mm}
+% %        \VERIFIERB{}
+%       }}}
+%     \end{spacing}
+%   \end{center}
+
+  \vspace{0.1in}
+
+  \begin{center}
+    \textbf{\textit{\Large{\REPORTMONTH{} \REPORTDAY{}, \REPORTYYYY{}}}}
+  \end{center}
+
+  \vspace{0.1in}
+
+  \REPORTPROPFOOT{}
+
+\end{titlepage}
+
+%%%%% END OF TITLE PAGE
+
+\thispagestyle{fancy}
+\setcounter{page}{2}
+
+\loadgeometry{body}
+
+%Set header dimensions. Funny, this seems to work. Why?
+\setlength{\headwidth}{\textwidth}
+
+\clearpage
+
+\newpage
+
+%%%%% START OF TABLE OF CONTENTS %%%%%
+
+\clearpage %% needed by tocloft
+\tableofcontents
+% \clearemptydoublepage
+% \pagenumbering{arabic}
+\hypersetup{pageanchor=true}
+
+\newpage
+
+%%%%% START OF REVISION HISTORY TABLE %%%%%
+
+\section*{Revision History}
+
+\begin{tabularx}{\textwidth}{cll}
+\toprule
+Revision & Date & Description \\
+\midrule
+% A & March 26, 2021 & Initial draft \\
+\REPORTREVISION{} \REPORTSTATUS{} & \REPORTMONTH{} \REPORTDAY{}, \REPORTYYYY{} & Developmental draft \\
+\bottomrule
+\end{tabularx}
+
+\newpage
+
+% Change the name; will appear in ToC as a \chapter*{}
+% See https://tex.stackexchange.com/questions/124608/how-to-format-the-name-of-a-nomenclature
+% for changing section level
+\renewcommand{\nomname}{Nomenclature and Definitions}
+\printnomenclature
+
+\newpage
+
+% Manually-composed executive summary
+% \include{overview}
+
+% Manually-composed standards proposal
+% \include{std_proposal}
+
+\part{Overview}
+
+% Manually-composed introductory file
+\include{overview}
+
+\part{Build Process}
+
+% Manually-composed build process description
+\include{build}
+
+\part{Implementation}
+\label{p:implementation}
+
+%--- Begin generated contents ---

@@ -1,0 +1,19 @@
+% Latex footer for doxygen 1.8.18
+%--- End generated contents ---
+
+% References
+\newpage
+\phantomsection
+% Specify bibstyle in doxygen_header.tex.in near usepackage{natbib}
+% \bibliographystyle{plain}
+\bibliography{fortran-lua53}
+\addcontentsline{toc}{chapter}{References}
+
+% Index
+\newpage
+\phantomsection
+% \clearpage
+\addcontentsline{toc}{chapter}{\indexname}
+\printindex
+
+\end{document}

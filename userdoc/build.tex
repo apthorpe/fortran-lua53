@@ -1,0 +1,512 @@
+\chapter{Software Build Process}
+
+\section{Overview}
+
+The minimal software build process for \texttt{fortran-lua53} is as follows:
+\begin{itemize}
+    \item Retrieve the project files from a trusted or canonical source
+    to a local computer for building
+    \item Install required and optional dependencies (tools, source
+    code, libraries, \textit{etc.})
+    \item Configure the build process using the CMake utility and a
+    lower-level build tool (\textit{e.g.} \texttt{make},
+    \texttt{ninja})
+    \item Run the lower-level build tool to compile and link the source
+    code into one or more executable files
+    \item Run the integral tests and compare the results to reference
+    output to verify the code performs as expected
+\end{itemize}
+
+The tools required to implement these actions are considered required
+dependencies. Additional actions may be performed such as building and
+running unit tests for extended code verification, generating
+documentation in HTML and PDF format, estimating which portions of the
+code have been exercised by verification tests, and packaging build
+artifacts (executable files, data, documentation) to simplify
+distribution and installation. The tools necessary to perform these
+actions are recommended but optional.
+
+More detailed information on aspects of the build process and required
+and optional dependencies are provided in the following sections.
+
+\section{Dependencies}
+
+TBD
+
+% \begin{itemize}
+%     \item \texttt{fortran-lua53} (this package), see \href{https://github.com/apthorpe/fortran-lua53}
+%     \item Lua 5.3, see \href{https://www.lua.org/}
+% \end{itemize}
+
+% \subsection{Required Tools}
+
+% The canonical source of project files for SOFIRE~II is
+% \url{https://gitlab.com/apthorpe/sofire2}. Project files may be
+% downloaded as a \texttt{.zip} archive or may be retrieve using the
+% \texttt{git} revision control system.
+
+% SOFIRE~II requires several source files from the FLIBS suite of Fortran
+% tools and libraries, available at \url{http://flibs.sourceforge.net}.
+% Specifically, the diagnostic logging facility and command-line argument
+% processing functions in SOFIRE~II are implemented by routines from
+% FLIBS.
+
+% The application and test routines are implemented in modern Fortran so
+% a compiler that supports at least Fortran 2008 is required to build
+% SOFIRE~II. \texttt{gfortran} versions 9.2 and later are known to work;
+% \texttt{gfortran} is part of the GNU Compiler Collection (GCC) which is
+% available for many platforms (combinations of operating system and
+% hardware). Intel Fortran (\texttt{ifort}) should work as well but has
+% not been tested.
+
+% The combined build, documentation, test, and packaging system requires
+% CMake, available from \url{https://cmake.org/download/}. CMake is a
+% flexible automation tool which detects resources and tools, possibly
+% retrieving, building, and installing secondary dependencies and
+% configures specific tools to compile and link source code into
+% executables. In the case of the SOFIRE~II modernization project, CMake
+% also runs integral and unit tests via CTest and builds
+% platform-specific archives and installation packages with CPack. CMake
+% is also used to create documentation from the SOFIRE~II source code and
+% to estimate which parts of the SOFIRE~II code have been exercised
+% during testing, \textit{i.e.} generates test coverage statistics.
+
+% Importantly, CMake manages a variety of tools and resources on Windows,
+% Linux, and OSX, allowing SOFIRE~II to be built, tested, documented, and
+% packaged on each operating system with little to no platform-specific
+% configuration by the end developer.
+
+% CMake supports several \emph{generators} on each platform: \texttt{ninja}
+% on Linux, OSX, and Windows, \textsc{unix} \texttt{Makefiles} on OSX and
+% Linux, plus integrated development environments (IDEs) such as Visual
+% Studio, XCode, or Eclipse, each of which which may configure compilers
+% and linkers, \textit{etc.}
+
+% For simplicity, a lower-level build tool such as \texttt{make} or
+% \texttt{ninja} (\url{https://ninja-build.org/}) is sufficient.
+% \texttt{ninja} is known to work on both Windows and Linux while
+% \texttt{make} works on both OSX and Linux.
+
+% Unit tests are implemented using the TOAST framework
+% (\url{https://github.com/thomasms/toast}) which is retrieved, built, and
+% integrated into the unit test build process by CMake. While unit tests
+% are not required for building the SOFIRE~II application, they are
+% important for demonstrating that the application internals work as
+% expected when tested in isolation.
+
+% In limited networking environments where downloading source code
+% directly from public repositories is difficult or impossible,
+% \texttt{./cmake/BuildTOAST.cmake} may be modified to point at a local
+% archive or repository instead (beware -- TOAST
+% makes use of git submodules to retrieve its own dependencies).
+
+% While \texttt{git} is used by CMake for retrieving the TOAST sources and
+% dependencies, \texttt{git} is not otherwise required for building
+% SOFIRE~II. Consider \texttt{git} to be optional but strongly
+% recommended.
+
+% SOFIRE~II's diagnostic logging facility is implemented by
+% \texttt{m\_multilog.f90} from FLIBS. The code's command line argument
+% processor is implemented with \texttt{command\_args.f90}, also from
+% FLIBS. While FLIBS may be retrieved manually, the project currently
+% uses \texttt{subversion} to retrieve the source code from the remote
+% repository during the build process.
+
+% Similar to TOAST, \texttt{./cmake/BuildFLIBS.cmake} may be modified to
+% point at a local archive or repository if network access or
+% \texttt{subversion} is not available. As with \texttt{git},
+% \texttt{subversion} is not otherwise required for
+% building or using SOFIRE~II, though it is recommended to allow automatic
+% retrieval of FLIBS bu CMake.
+
+% \subsection{Optional Tools}
+
+% Documentation is produced using Doxygen
+% (\url{https://www.doxygen.nl/index.html}) which expects to find the
+% \texttt{dot} application from Graphviz (\url{https://graphviz.org/}).
+% PDF documentation is generated via \LaTeX; the TeXLive distribution
+% (\url{https://www.tug.org/texlive/}) is known to work on both Windows
+% and Linux. Additionally Perl is necessary for TeXLive on Linux and OSX
+% but a version of Perl is supplied with the Windows verstion. The code
+% comparison documentation relies on plots generated via Gnuplot
+% (\url{http://www.gnuplot.info/}).
+
+% Packaging utilities vary by operating system but on Windows both WIX
+% (\url{https://wixtoolset.org/}) and NSIS
+% (\url{https://nsis.sourceforge.io/Main_Page}) are supported. ZIP
+% archives are supported by default on all platforms, \texttt{.tar.gz}
+% and \texttt{.tar.bz2} archives are supported by default
+% on unix-like systems (OSX, Linux). DragNDrop (\texttt{.dmg}) installers
+% are created on OSX systems and \texttt{.deb} packages are built on
+% Debian-flavored Linux systems. CPack will only attempt to build
+% packages if the requisite packaging utilities are detected; at a
+% minimum, static zip archives are supported on every platform.
+
+% \texttt{git} is used by CMake to retrieve the TOAST unit test framework
+% and its dependencies but otherwise is not required to build or use
+% SOFIRE~II.
+
+% \texttt{subversion} is used by CMake to retrieve the FLIBS suite of
+% utility routines but otherwise is not required to build or use
+% SOFIRE~II.
+
+% Test coverage metrics can be generated with \texttt{gcov}
+% (\url{https://gcc.gnu.org/onlinedocs/gcc/Gcov.html}) and \texttt{lcov}
+% (\url{http://ltp.sourceforge.net/coverage/lcov.php}). Both are known
+% to work on Linux but have not been tested on OSX or Windows.
+
+% \subsection{Summary of Dependencies}
+
+% The resources listed in the previous sections have been categorized as
+% required or optional in this section. Note that each dependency may have
+% further dependencies (\textit{e.g.} \texttt{perl} for \LaTeX on OSX and
+% Linux). However this is a best-effort attempt to document known direct
+% dependencies based on experience building SOFIRE~II on Linux, Windows,
+% and OSX.
+
+% The minimal set of tools and resources required to build the SOFIRE~II
+% executable are:
+
+% \begin{itemize}
+%     \item The SOFIRE~II software distribution,
+%     \url{https://gitlab.com/apthorpe/sofire2}
+%     \item The FLIBS library of Fortran utility routines,
+%     \url{http://flibs.sourceforge.net}
+%     \item A Fortran compiler which supports at least Fortran~2008 such
+%     as \texttt{gfortran}, \url{https://gcc.gnu.org/wiki/GFortran}
+%     \item The CMake build automation system, version 3.17 or later,
+%     \url{https://cmake.org/download/}
+%     \item A low-level build tool (generator) appropriate for the target
+%     platform:
+%     \begin{itemize}
+%         \item \texttt{make} on Linux or OSX systems,
+%         \url{https://www.gnu.org/software/make/}
+%         \item \texttt{ninja} on Linux or Windows systems,
+%         \url{https://ninja-build.org/}
+%         \item Others may work (Microsoft Visual Studio, MSBUILD, Xcode)
+%         but \texttt{make} and \texttt{ninja} have been tested and are
+%         known to work
+%     \end{itemize}
+%     \item The \texttt{subversion} revision control system,
+%     \url{https://subversion.apache.org/}
+% \end{itemize}
+
+% Note that \texttt{subversion} is only required for automatically
+% retrieving and configuring the FLIBS library. It is listed as a
+% requirement since (at present) the build process expects
+% \texttt{subversion} is available and there is no provision for avoiding
+% it without manually editing \texttt{cmake/BuildTOAST.cmake}
+
+% Optional dependencies include:
+
+% \begin{itemize}
+%     \item The \texttt{git} revision control system
+%     \url{https://git-scm.com/}
+%     \item The TOAST unit testing framework, \url{https://github.com/thomasms/toast}
+%     \item The Doxygen software documentation generator, \url{https://www.doxygen.nl/index.html}
+%     \item The \texttt{dot} network diagramming utility from Graphviz, \url{https://graphviz.org/}
+%     \item A recent installation \LaTeX, preferably TeXLive 2020 or later, \url{https://www.tug.org/texlive/}
+%     \item The Gnuplot plotting package, \url{http://www.gnuplot.info/}
+%     \item Packaging tools appropriate for the target platform:
+%     \begin{itemize}
+%         \item WIX, \url{https://wixtoolset.org/} (Windows)
+%         \item Nullsoft Scriptable Install System (NSIS), \url{https://nsis.sourceforge.io/Main_Page} (Windows)
+%         \item \texttt{rpmbuild}, \url{https://rpm-packaging-guide.github.io/} (Linux; Red Hat, Fedora, and CentOS)
+%         \item Debian packaging tools (various), \url{https://www.debian.org/doc/manuals/developers-reference/tools.html} (Linux; Debian and variants)
+%         \item \texttt{Xcode}, for creating DragNDrop (\texttt{.dmg}) installers, \url{https://developer.apple.com/xcode/} (OSX)
+%     \end{itemize}
+%     \item Test coverage utilities:
+%     \begin{itemize}
+%         \item \texttt{gcov} for measuring test coverage, \url{https://gcc.gnu.org/onlinedocs/gcc/Gcov.html} (Linux, possibly others)
+%         \item \texttt{lcov} for report generation, \url{http://ltp.sourceforge.net/coverage/lcov.php} (Linux, possibly others)
+%     \end{itemize}
+% \end{itemize}
+
+% \section{Configuration and Build Process}
+
+% \begin{itemize}
+%     \item Download and unpack / pull source distribution
+%     \item \texttt{cd} \emph{project root}
+%     \item \texttt{mkdir build}
+%     \item \texttt{cd build}
+%     \item \texttt{cmake ..} with options like \texttt{-C Release} or \texttt{Debug}, \texttt{-G} \emph{generator}, \texttt{-D} \emph{config vars}
+%     \item Build with the appropriate generator
+% \end{itemize}
+
+% Assuming all application dependencies have been satisfied, a minimal
+% build on Linux or OSX might resemble:
+
+% \begin{Verbatim}
+%     git clone https://gitlab.com/apthorpe/sofire2.git
+%     cd sofire2
+%     cmake -S . -B build -C Debug -G "Unix Makefiles" \
+%         -D ENABLE_UNIT_TESTS:BOOL=OFF -D ENABLE_DOCUMENTATION:BOOL=OFF
+%     cd build
+%     make all
+%     make test
+%     make package
+% \end{Verbatim}
+
+% The SOFIRE~II application will be located under \texttt{sofire2/build/sofire2\_1c.exe},
+% the CEA2 property data files (not required \ldots yet) are located under the directory at
+% \texttt{sofire2/data} and the sample input and reference output files are under
+% \texttt{sofire2/test/c1}. See also \texttt{sofire2/build/SOFIRE-2.x.x-*.zip}
+% for an archive containing these files and the (Debian/Ubuntu) installation package
+% \texttt{sofire2/build/SOFIRE-2.x.x-*.deb}.
+
+% On Windows:
+
+% \begin{Verbatim}
+%     git clone https://gitlab.com/apthorpe/sofire2.git
+%     cd sofire2
+%     cmake -S . -B build -G Ninja -D ENABLE_UNIT_TESTS:BOOL=OFF -D ENABLE_DOCUMENTATION:BOOL=OFF
+%     cd build
+%     ninja all
+%     ninja test
+%     ninja package
+% \end{Verbatim}
+
+% Similarly, the SOFIRE~II application will be located under \texttt{sofire2\\build\\sofire2\_1c.exe},
+% the CEA2 property data files are located under the directory
+% \texttt{sofire2\\data} and the sample input and reference output files are under
+% \texttt{sofire2\\test\\c1}. See also \texttt{sofire2\\build\\SOFIRE-2.x.x-win64.zip}
+% for an archive containing these files and installer applications
+% \texttt{sofire2\\build\\SOFIRE-2.x.x-win64.msi} and
+% \texttt{sofire2\\build\\SOFIRE-2.x.x-win64.exe}
+
+% Note that on Windows the main source files only consume 32MB, but the
+% full \texttt{git} repository (history) consumes an additional 55MB, and
+% the generated build files take another 67MB. Contrast with the \texttt{.zip}
+% archive (1.42MB) and the installers (1.65MB for the \texttt{.msi},
+% 1.02MB for the \texttt{.exe}). If the above process were extended to
+% build unit tests and PDF documentation, the generated build files would
+% consume 286MB and the archives would expand by about 10MB to include
+% the PDF developer documentation.
+
+% \subsection{CMake Options}
+
+% Of all the CMake option groups available, the three most relevant to
+% SOFIRE~II are generators (specified with \texttt{-G}), release
+% configuration (\texttt{-C}) and detailed CMake settings (\texttt{-D}).
+
+% \subsection{Generators \texttt{-G}}
+
+% Generators refer to lower-level build systems - \texttt{make},
+% \texttt{ninja}, \textit{etc.}
+
+% If left unspecified, CMake will detect the available generators on the
+% system and uses some internal heuristic to select one that seems
+% appropriate. This generally works without incident but there are times
+% when CMake guesses wrong and user intervention is necessary.
+% See \url{https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html}
+% for more information.
+
+% In general, \texttt{-G "Unix Makefiles"} is recommended on Linux and OSX
+% and \texttt{-G "Ninja"} or \texttt{-G "Ninja Multi-Config"} is
+% recommended on Windows.
+
+% \subsection{Release Configuration \texttt{-C}}
+
+% Generators on some platforms (notably Windows) expect the release
+% configuration to be set via \texttt{-C}. Typical release configuration
+% values are \texttt{Release} or \texttt{Debug}. This option is generally
+% used to set directory and file names and to set compiler and linker
+% flags to control diagnostic features and set compiler optimization
+% levels.
+
+% For SOFIRE~II, there is currently little distinction between
+% \texttt{Release} or \texttt{Debug}; correctness and transparency are
+% considered more valuable than speed or efficiency but that may change
+% in the future if performance is found to be an issue.
+
+% It is currently recommended to run CMake with \texttt{-C Debug} but
+% users are unlikely to notice performance or accuracy changes if
+% \texttt{-C Release} is set instead.
+
+% Note that using the generator option \texttt{-G "Ninja Multi-Config"}
+% will build both debug and release configurations.
+
+% Also note that integral and unit tests are currently associated with
+% three release configurations: \texttt{Debug}, \texttt{Release}, and
+% \texttt{""} (empty, unspecified). This ensures that tests are run
+% regardless of the release configuration; explicitly specifying the
+% empty configuration ensures tests run even if CMake is run without
+% setting the \texttt{-C} option. In some cases it is helpful
+% to limit tests to a particular configuration, for example reserving
+% experimental, long-running, or resource-intensive tests for
+% \texttt{Debug} builds.
+
+% \subsection{Specific CMake Configuration Settings \texttt{-D}}
+
+% A large number of internal CMake variables may be set by the user by
+% way of the \texttt{-D} option; see \url{https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html}
+% for details.
+
+% Several variables specific to SOFIRE~II are:
+
+% \begin{itemize}
+%     \item \texttt{ENABLE\_UNIT\_TESTS}
+%     \item \texttt{ENABLE\_DOCUMENTATION} and
+%     \item \texttt{ENABLE\_COVERAGE}
+% \end{itemize}
+
+% The variable \texttt{ENABLE\_UNIT\_TESTS} enables SOFIRE~II's unit tests
+% and attempts to retrieve and build the TOAST test framework. The value
+% defaults to \texttt{ON} but may be disabled by passing
+% \texttt{-D ENABLE\_UNIT\_TESTS:BOOL=OFF} to CMake. If network access is
+% limited or \texttt{git} is unavailable, this option may be necessary to
+% build SOFIRE~II. Note that disabling unit tests does not affect integral
+% tests; running \texttt{make test} or \texttt{ninja test} should still run
+% integral tests via CTest.
+
+% The variable \texttt{ENABLE\_DOCUMENTATION} directs CMake to build
+% documentation using Doxygen, Gnuplot, Graphviz, and \LaTeX if available.
+% The value defaults to \texttt{ON} but may be disabled by passing
+% \texttt{-D ENABLE\_DOCUMENTATION:BOOL=OFF} to CMake. Documentation
+% generation is resource-intensive and requires a number of dependencies
+% which are not strictly required for building the SOFIRE~II executable.
+% Installation of \LaTeX via TeXLive is particularly lengthy and involved
+% and in some environments may be difficult or impossible especially if
+% network access is limited.
+
+% The variable \texttt{ENABLE\_COVERAGE} enables code coverage analysis,
+% showing which portions of the code have (or perhaps more importantly,
+% have not) been exercised by unit and integral tests.
+% \texttt{ENABLE\_COVERAGE} is set to \texttt{OFF} (disabled) by default
+% but can be enabled by passing \texttt{-D ENABLE\_COVERAGE:BOOL=ON} to
+% CMake. Coverage analysis requires the \texttt{gcov} and \texttt{lcov}
+% tools which currently have only been tested on Linux. Coverage analysis
+% is disabled by default since it is more useful to those actively
+% developing SOFIRE~II than to those only interested in building the
+% code and its documentation for normal use. Disabling it by default
+% reduces the number of external tools needed for building the code. Note
+% that even if \texttt{ENABLE\_COVERAGE} is enabled, coverage analysis
+% will not be available unless \texttt{gcov} and \texttt{lcov} are
+% available. This setting is currently only relevant to active developers
+% running Linux where \texttt{gcov} and \texttt{lcov} are known to be
+% installed and working.
+
+% Currently unit tests are implemented via the TOAST framework. TOAST
+% may either be downloaded and installed as part of the SOFIRE~II build
+% process or a local pre-installed version may be used if it is available.
+% To use a local installation, set one or both of the following options
+% via \texttt{-D}:
+
+% \begin{itemize}
+%     \item \texttt{TOAST\_ROOT}
+%     \item \texttt{TOAST\_MODULE\_PATH}
+% \end{itemize}
+
+% \texttt{TOAST\_ROOT} sets the root of the installation directory of the
+% TOAST library. For example, if the TOAST library was installed at
+% \texttt{/opt/local/lib/libtoast.a} and its module file at
+% \texttt{/opt/local/include/toast.mod}, \texttt{TOAST\_ROOT} should be
+% set to \texttt{/opt/local}. This allows \texttt{FindTOAST.cmake} to
+% detect the \texttt{lib} and \texttt{include} directories for linking
+% with the unit test executables.
+
+% Unfortunately there is no standard location for Fortran \texttt{.mod}
+% files as there is with libraries and C/C++ headers. To compensate for this,
+% \texttt{TOAST\_MODULE\_PATH} should be set to the directory containing
+% \texttt{toast.mod}. For example, if the TOAST library was installed at
+% \texttt{/opt/local/lib/libtoast.a} and its module file at
+% \texttt{/opt/local/finclude/toast/toast.mod}, \texttt{TOAST\_ROOT}
+% should be set to \texttt{/opt/local} (as before) and
+% \texttt{TOAST\_MODULE\_PATH} should be set to
+% \texttt{/opt/local/finclude/toast}.
+
+% Several CMake variables configurable via \texttt{-D} which may be relevant
+% to SOFIRE~II are:
+
+% \begin{itemize}
+%     \item \texttt{CMAKE\_Fortran\_COMPILER} - common name of Fortran compiler or full path to compiler executable
+%     \item \texttt{CMAKE\_C\_COMPILER} - as previous but to specify the C compiler
+%     \item \texttt{CMAKE\_CXX\_COMPILER} - as previous but to specify the C++ compiler
+% \end{itemize}
+
+% CMake detects compilers by searching the path defined by the local
+% environment and may inadvertantly select an undesirable or incompatible
+% compiler. Explicitly setting tool locations allows the user to resolve
+% situations where CMake does not automatically select a working or
+% desirable set of build tools.
+
+% Example, Strawberry Perl on Windows installs its own copy of
+% \texttt{gfortran.exe} which may be detected instead of the user's own
+% installation of the GCC suite\footnote{The author points out that this occurance
+% was as irritating as it was unexpected, prompting this discussion.}.
+% Rather than modifying the system path, it may be simpler and more reliable
+% to explicitly set compiler locations by passing options to CMake.
+
+% Note that if one compiler path is explictly set, it is often helpful
+% to explicitly set the path to all the compilers due to interdependencies
+% among compilers in a compiler suite.
+
+% \subsection{\texttt{make} Example}
+
+% To build with \texttt{make}:
+
+% \begin{itemize}
+%     \item \texttt{make}
+%     \item \texttt{make test}
+%     \item \texttt{make docs}
+%     \item \texttt{make package}
+% \end{itemize}
+
+% \subsection{\texttt{ninja} Example}
+
+% To build with \texttt{ninja}:
+
+% \begin{itemize}
+%     \item \texttt{ninja}
+%     \item \texttt{ninja test}
+%     \item \texttt{ninja docs}
+%     \item \texttt{ninja package}
+% \end{itemize}
+
+\section{Testing}
+
+TBD
+
+% Two types of tests are available: \emph{integral} tests and \emph{unit}
+% tests. Integral tests involve running sample cases with the full
+% SOFIRE~II application and comparing the results against reference data.
+% No framework or additional software is necessary to run integral tests;
+% these are always available regardless of build settings.
+
+% Unit tests require the TOAST framework and build special-purpose test
+% executables which allow individual classes, functions, subroutines, and
+% other internals to be tested in isolation from the main SOFIRE~II
+% executable.
+
+% Unit testing is accomplished using CTest and TOAST. \texttt{make test} and
+% \texttt{ninja test} will run CTest or the \texttt{ctest} command may be
+% run directly.
+
+% % If test coverage analysis is available using \texttt{gcov} and
+% % \texttt{lcov}, the additional build targets are available:
+% % \texttt{}, \texttt{}, \texttt{}, \texttt{}
+
+\section{Documentation}
+
+Doxygen, Graphviz, and \LaTeX are used to create PDF
+documentation. HTML documentation may also be created with Doxygen but
+the primary documentation is in PDF form.
+
+If \LaTeX is not available, a placeholder PDF will be generated which
+links to the original software distribution.
+
+Since documentation generation is much more resource intensive than
+software compilation and testing, the \texttt{docs} build target is
+not built by default.
+
+\texttt{stdlib-codata} documentation generation is rather complex\ldots
+% the PDF manual contains not only API and internal code documentation produced by
+% Doxygen but an extensive replication and update of the original 1973
+% manual (see \cite{Beiriger1973}) as well as replication of code
+% analysis and testing from \cite{Sienicki2012}.
+
+\section{Packaging}
+
+Packaging with CPack, \texttt{make package}, \texttt{ninja package},
+\textit{etc.} is strongly encouraged to simplify distribution,
+installation, and removal.
