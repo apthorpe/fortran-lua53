@@ -53,6 +53,19 @@ project(FORTRANLUA53
 # Set C++ compiler with environment variable CXX or CMake option
 # -D CMAKE_CXX_COMPILER
 
+# Test coverage analysis with gcov/lcov is disabled by default; enable with
+# CMake option -D ENABLE_COVERAGE:BOOL=ON
+# The following is defined in Findcodecov.cmake:
+option(ENABLE_COVERAGE "Enable coverage build." OFF)
+
+# Unit tests are disabled by default; enable with CMake option
+# -D ENABLE_UNIT_TESTS:BOOL=ON
+option(ENABLE_UNIT_TESTS "Enable unit tests." ON)
+
+# TOAST library search directories
+set(TOAST_ROOT "" CACHE PATH "Installation root of TOAST library")
+set(TOAST_MODULE_PATH "" CACHE PATH "Directory containing TOAST Fortran module (.mod) files")
+
 # Documentation creation is enabled by default; disable with CMake option
 # -D ENABLE_DOCUMENTATION:BOOL=OFF
 option(ENABLE_DOCUMENTATION "Create documentation." ON)
@@ -92,11 +105,42 @@ include(FetchContent)
 include(CTest)
 enable_testing()
 
+# Enable code coverage
+find_package(codecov)
+
+# Look for local installation of git
+find_package(Git)
+
+# Enable unit testing with TOAST
+if(ENABLE_UNIT_TESTS)
+    # Detect local installation of TOAST, if any. This requires
+    # TOAST_ROOT is set as an argument to CMake
+    find_package(TOAST)
+    if (TOAST_FOUND)
+        include(TOASThelper)
+    else()
+        # Needed for retrieving TOAST
+        # Move out of this structure if git is needed elsewhere;
+        # attempting to remove it completely as a dependency
+        if(Git_FOUND)
+            # Retrieve and build TOAST from network
+            # include(BuildTOAST) # This works but is rather convoluted
+            include(IncludeTOAST)
+            include(TOASThelper)
+        else()
+            # Disable unit tests if TOAST not found locally or
+            # built from remote sources
+            message(STATUS "WTF? TOAST SHOULD BE AVAILABLE!")
+            set(ENABLE_UNIT_TESTS OFF)
+        endif()
+    endif()
+endif()
+
 # Manage Fortran compiler options, library linking and .mod file inclusion
 include(FortranHelper)
 
-# # Manage C compiler options
-# include(CHelper)
+# Manage C compiler options
+include(CHelper)
 
 # Note: Doxygen detection and setup is performed in the Documentation section
 
@@ -209,7 +253,7 @@ target_link_libraries(${LIBLUA53_NAME} PUBLIC m)
 
 set_target_properties(${LIBLUA53_NAME}
     PROPERTIES
-    # OUTPUT_NAME lua
+    # OUTPUT_NAME lua53
     DEPENDS LUA53_external
 )
 
@@ -235,7 +279,7 @@ target_link_libraries(${LUAC53_NAME} PUBLIC ${LIBLUA53_NAME})
 
 set_target_properties(${LUAC53_NAME}
     PROPERTIES
-    # OUTPUT_NAME lua
+    # OUTPUT_NAME luac53
     DEPENDS ${LIBLUA53_NAME}
 )
 
@@ -413,107 +457,103 @@ install(TARGETS ${XSTRING_NAME})
 # ## Testing ####################################################################
 # ###############################################################################
 
-# set(TEST_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/test")
+set(TEST_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/test")
 
-# # ***** Pre-Test File and Directory Generation *****
+# ***** Pre-Test File and Directory Generation *****
 
-# # Create test output as separate target folded into `make all`
-# add_custom_target(fortran-lua53_test_setup
-#     ALL
-#     DEPENDS fortran-lua53
-#     COMMAND ${CMAKE_COMMAND} -E echo "Copying test"
-#     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/test" "${TEST_BASE_DIR}"
-#     VERBATIM
-#     USES_TERMINAL
-# )
+# Create test output as separate target folded into `make all`
+add_custom_target(fortran-lua53_test_setup
+    ALL
+    DEPENDS ${FORTRANLUA53LIB_NAME}
+    COMMAND ${CMAKE_COMMAND} -E echo "Copying test"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/test" "${TEST_BASE_DIR}"
+    VERBATIM
+    USES_TERMINAL
+)
 
-# # Create example 1 test output as separate target folded into `make all`
-# set(EXAMPLE_DIR "${TEST_BASE_DIR}/csv_to_db")
-# add_custom_target(run_example_1
-#     ALL
-#     DEPENDS fortran-lua53_test_setup
-#     COMMAND ${CMAKE_COMMAND} -E echo "Running test csv_to_db; output is in csv_to_db.out"
-#     COMMAND $<TARGET_FILE:csv_to_db> > csv_to_db.out
-#     BYPRODUCTS csv_to_db.out somedata.db
-#     WORKING_DIRECTORY "${EXAMPLE_DIR}"
-#     VERBATIM
-#     USES_TERMINAL
-# )
+# Create fibonacci test output as separate target folded into `make all`
+set(EXAMPLE_DIR "${TEST_BASE_DIR}/fibonacci")
+add_custom_target(run_fibonacci
+    ALL
+    DEPENDS fortran-lua53_test_setup
+    COMMAND ${CMAKE_COMMAND} -E echo "Running test fibonacci; output is in fibonacci.out"
+    COMMAND $<TARGET_FILE:fibonacci> > fibonacci.out
+    BYPRODUCTS fibonacci.out
+    WORKING_DIRECTORY "${EXAMPLE_DIR}"
+    VERBATIM
+    USES_TERMINAL
+)
 
-# # Create example 2 test output as separate target folded into `make all`
-# set(EXAMPLE_DIR "${TEST_BASE_DIR}/create_db")
-# add_custom_target(run_example_2
-#     ALL
-#     DEPENDS fortran-lua53_test_setup
-#     COMMAND ${CMAKE_COMMAND} -E echo "Running test create_db; output is in create_db.out"
-#     COMMAND $<TARGET_FILE:create_db> > create_db.out
-#     BYPRODUCTS create_db.out arjen.db
-#     WORKING_DIRECTORY "${EXAMPLE_DIR}"
-#     VERBATIM
-#     USES_TERMINAL
-# )
+# Create string test output as separate target folded into `make all`
+set(EXAMPLE_DIR "${TEST_BASE_DIR}/string")
+add_custom_target(run_string
+    ALL
+    DEPENDS fortran-lua53_test_setup
+    COMMAND ${CMAKE_COMMAND} -E echo "Running test string; output is in string.out"
+    COMMAND $<TARGET_FILE:string> > string.out
+    BYPRODUCTS string.out
+    WORKING_DIRECTORY "${EXAMPLE_DIR}"
+    VERBATIM
+    USES_TERMINAL
+)
 
-# # Most basic testing:
+# ***** Integral Tests *****
 
-# # Example 1
-# set(EXAMPLE_DIR "${TEST_BASE_DIR}/csv_to_db")
-# add_test(NAME example_1_output
-#     COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol csv_to_db.out csv_to_db.ref
-#     WORKING_DIRECTORY "${EXAMPLE_DIR}"
-#     CONFIGURATIONS Debug Release ""
-# )
+# Tests using CMake's simple built-in "compare_files" command
+# Compare output with reference data
 
-# # Example 2
-# set(EXAMPLE_DIR "${TEST_BASE_DIR}/create_db")
-# add_test(NAME example_2_output
-#     COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol create_db.out create_db.ref
-#     WORKING_DIRECTORY "${EXAMPLE_DIR}"
-#     CONFIGURATIONS Debug Release ""
-# )
+# fibonacci
+set(EXAMPLE_DIR "${TEST_BASE_DIR}/fibonacci")
+add_test(NAME fibonacci_output
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol fibonacci.out fibonacci.ref
+    WORKING_DIRECTORY "${EXAMPLE_DIR}"
+    CONFIGURATIONS Debug Release ""
+)
 
-# # Set shared properties on tests
-# set_tests_properties(
-#     example_1_output
-#     example_2_output
-#     PROPERTIES
-#     DEPENDS fortran-lua53
-#     DEPENDS fortran-lua53_test_setup
-#     DEPENDS run_example_1
-#     DEPENDS run_example_2
-#     TIMEOUT 30
-# )
+# string
+set(EXAMPLE_DIR "${TEST_BASE_DIR}/string")
+add_test(NAME string_output
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol string.out string.ref
+    WORKING_DIRECTORY "${EXAMPLE_DIR}"
+    CONFIGURATIONS Debug Release ""
+)
 
-# # ***** Integral Tests *****
+# Set shared properties on tests
+set_tests_properties(
+    fibonacci_output
+    string_output
+    PROPERTIES
+    DEPENDS ${FORTRANLUA53LIB_NAME}
+    DEPENDS fortran-lua53_test_setup
+    DEPENDS run_fibonacci
+    DEPENDS run_string
+    TIMEOUT 30
+)
 
-# # Tests using CMake's simple built-in "compare_files" command
-# # Compare output and reformatted original reference data
+# ***** Unit Tests *****
 
-# # Example 1
-# add_test(NAME example_1_pr
-#     COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol EXPR.001 EXPR.001.ref
-#     CONFIGURATIONS Debug Release ""
-# )
+# Unit test executables - source directory
+set(TEST_SRC_BASE "${CMAKE_CURRENT_SOURCE_DIR}/test")
+set(UNITTEST_SRC_BASE "${TEST_SRC_BASE}/unittest")
 
-# add_test(NAME example_1_cr
-#     COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol EXCR.001 EXCR.001.ref
-#     CONFIGURATIONS Debug Release ""
-# )
+if(ENABLE_UNIT_TESTS)
 
-# add_test(NAME example_1_mb
-#     COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol EXMB.001 EXMB.001.ref
-#     CONFIGURATIONS Debug Release ""
-# )
-
-# set_tests_properties(
-#     example_1_pr
-#     example_1_cr
-#     example_1_mb
-#     PROPERTIES
-#     DEPENDS codata
-#     DEPENDS run_example_1
-#     WORKING_DIRECTORY "${TEST_BASE_DIR}/example_1"
-#     TIMEOUT 30
-# )
+    # TOAST null test
+    set(EXAMPLE_DIR "${TEST_BASE_DIR}/unittest")
+    list(APPEND TEST_SOURCES
+        "${UNITTEST_SRC_BASE}/ut_null.f90"
+        "${EXTRAN_DEP_SOURCES}")
+    add_toast_unit_test(
+        TARGET ut_null
+        SOURCES ${TEST_SOURCES}
+        DEPENDENCIES fortran-lua53_test_setup ${FORTRANLUA53LIB_NAME}
+        RUN_DIRECTORY ${EXAMPLE_DIR}
+        DEBUG
+    )
+    link_fortran_libraries(ut_null ${FORTRANLUA53LIB_NAME})
+    unset(TEST_SOURCES)
+    unset(EXAMPLE_DIR)
+endif()
 
 ###############################################################################
 ## Analysis ###################################################################
