@@ -309,6 +309,12 @@ module lua
         !> @brief Pushes onto the stack the value of the global name.
         !! Returns the type of that value.
         !!
+        !! This C API function is shadowed by the Fortran wrapper
+        !! function `lua_getglobal()` which automatically terminates the
+        !! Fortran string with `\0` for C compatibility. Do not use this
+        !! function in Fortran code unless you really know what you are
+        !! doing.
+        !!
         !! C signature: `int lua_getglobal(lua_State *L, const char *name)`
         function lua_getglobal_(l, name) bind(c, name='lua_getglobal')
             import :: c_char, c_int, c_ptr
@@ -1080,186 +1086,267 @@ contains
     !> @name Fortran wrapper functions
 
     !!!@{
-    !> @brief Wrapper for `lua_getglobal_()` that null-terminates string `name`.
+    !> @brief Pushes onto the stack the value of the global name.
+    !! Returns the type of that value.
+    !!
+    !! Wrapper for `lua_getglobal_()` that null-terminates string `name`.
     !!
     !! `int lua_getglobal(lua_State *L, const char *name)`
     function lua_getglobal(l, name)
-        !! Wrapper for `lua_getglobal_()` that null-terminates string `name`.
-
         !> Pointer to Lua interpreter state
         type(c_ptr),      intent(in) :: l
+        !> Name to associate with value
         character(len=*), intent(in) :: name
+        ! Return value
         integer                      :: lua_getglobal
+        continue
 
         lua_getglobal = lua_getglobal_(l, name // c_null_char)
     end function lua_getglobal
 
-    ! int lua_isboolean(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is boolean.
+    !!
+    !! C signature: `int lua_isboolean(lua_State *L, int index)`
     function lua_isboolean(l, idx)
-        !! Macro replacement that returns whether the stack variable is
-        !! boolean.
-
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+        ! Return value
         logical                 :: lua_isboolean
+        continue
 
-        lua_isboolean = .false.
+        ! lua_isboolean = .false.
 
-        if (lua_type(l, idx) == LUA_TBOOLEAN) &
-            lua_isboolean= .true.
+        ! if (lua_type(l, idx) == LUA_TBOOLEAN) &
+        !     lua_isboolean= .true.
+        lua_isboolean = (lua_type(l, idx) == LUA_TBOOLEAN)
     end function lua_isboolean
 
-    ! int lua_isfunction(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is a function.
+    !!
+    !! C signature: `int lua_isfunction(lua_State *L, int index)`
     function lua_isfunction(l, idx)
-        !! Macro replacement that returns whether the stack variable is a
-        !! function.
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+        ! Return value
         logical                 :: lua_isfunction
 
-        lua_isfunction = .false.
+        ! lua_isfunction = .false.
 
-        if (lua_type(l, idx) == LUA_TFUNCTION) &
-            lua_isfunction = .true.
+        ! if (lua_type(l, idx) == LUA_TFUNCTION) &
+        !     lua_isfunction = .true.
+
+        lua_isfunction = (lua_type(l, idx) == LUA_TFUNCTION)
     end function lua_isfunction
 
-    ! int lua_islightuserdata(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is a light userdata
+    !!
+    !! C signature: `int lua_islightuserdata(lua_State *L, int index)`
     function lua_islightuserdata(l, idx)
         !! Macro replacement that returns whether the stack variable is
         !! light user data.
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+        ! Return value
         logical                 :: lua_islightuserdata
 
-        lua_islightuserdata = .false.
+        ! lua_islightuserdata = .false.
 
-        if (lua_type(l, idx) == LUA_TLIGHTUSERDATA) &
-            lua_islightuserdata = .true.
+        ! if (lua_type(l, idx) == LUA_TLIGHTUSERDATA) &
+        !     lua_islightuserdata = .true.
+
+        lua_islightuserdata = (lua_type(l, idx) == LUA_TLIGHTUSERDATA)
     end function lua_islightuserdata
 
-    ! int lua_isnil(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is `nil`.
+    !!
+    !! C signature: `int lua_isnil(lua_State *L, int index)`
     function lua_isnil(l, idx)
         !! Macro replacement that returns whether the stack variable is
         !! nil.
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+        ! Return value
         logical                 :: lua_isnil
 
-        lua_isnil = .false.
+        ! lua_isnil = .false.
 
-        if (lua_type(l, idx) == LUA_TNIL) &
-            lua_isnil = .true.
+        ! if (lua_type(l, idx) == LUA_TNIL) &
+        !     lua_isnil = .true.
+
+        lua_isnil = (lua_type(l, idx) == LUA_TNIL)
     end function lua_isnil
 
-    ! int lua_isnone(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is `none`.
+    !!
+    !! C signature: `int lua_isnone(lua_State *L, int index)`
     function lua_isnone(l, idx)
-        !! Macro replacement that returns whether the stack variable is
-        !! nil.
-
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+
+        ! Return value
         logical                 :: lua_isnone
 
-        lua_isnone = .false.
+        ! lua_isnone = .false.
 
-        if (lua_type(l, idx) == LUA_TNONE) &
-            lua_isnone = .true.
+        ! if (lua_type(l, idx) == LUA_TNONE) &
+        !     lua_isnone = .true.
+
+        lua_isnone = (lua_type(l, idx) == LUA_TNONE)
     end function lua_isnone
 
-    ! int lua_isnoneornil(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is `none` or `nil`.
+    !!
+    !! C signature: `int lua_isnoneornil(lua_State *L, int index)`
     function lua_isnoneornil(l, idx)
-        !! Macro replacement that returns whether the stack variable is
-        !! none or nil.
-
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+
+        ! Return value
         logical                 :: lua_isnoneornil
 
-        lua_isnoneornil = .false.
+        ! lua_isnoneornil = .false.
 
-        if (lua_type(l, idx) <= 0) &
-            lua_isnoneornil = .true.
+        ! if (lua_type(l, idx) <= 0) &
+        !     lua_isnoneornil = .true.
+
+        lua_isnoneornil = (lua_type(l, idx) <= 0)
     end function lua_isnoneornil
 
-    ! int lua_istable(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is a table.
+    !!
+    !! C signature: `int lua_istable(lua_State *L, int index)`
     function lua_istable(l, idx)
-        !! Macro replacement that returns whether the stack variable is a
-        !! table.
-
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+
+        ! Return value
         logical                 :: lua_istable
 
-        lua_istable = .false.
+        ! lua_istable = .false.
 
-        if (lua_type(l, idx) == LUA_TTABLE) &
-            lua_istable = .true.
+        ! if (lua_type(l, idx) == LUA_TTABLE) &
+        !     lua_istable = .true.
+
+        lua_istable = (lua_type(l, idx) == LUA_TTABLE)
     end function lua_istable
 
-    ! int lua_isthread(lua_State *L, int index)
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is a thread.
+    !!
+    !! C signature: `int lua_isthread(lua_State *L, int index)`
     function lua_isthread(l, idx)
         !! Macro replacement that returns whether the stack variable is a
         !! thread.
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to check
         integer,     intent(in) :: idx
+
+        ! Return value
         logical                 :: lua_isthread
 
-        lua_isthread = .false.
+        ! lua_isthread = .false.
 
-        if (lua_type(l, idx) == LUA_TTHREAD) &
-            lua_isthread = .true.
+        ! if (lua_type(l, idx) == LUA_TTHREAD) &
+        !     lua_isthread = .true.
+
+        lua_isthread = (lua_type(l, idx) == LUA_TTHREAD)
     end function lua_isthread
 
-    ! int lua_pcall(lua_State *L, int nargs, int nresults, int msgh)
+    !> @brief Macro replacement that calls `lua_pcallk()`.
+    !!
+    !! C signature: `int lua_pcall(lua_State *L, int nargs, int nresults, int msgh)`
+    !!
+    !! @note Continuation-function context is hard-coded to `0_INT64`
+    !! (64-bit integer) which may cause problems if `LUA_INTEGER` is
+    !! defined to anything other than `__int64` in `luaconf.h`
     function lua_pcall(l, nargs, nresults, msgh)
-        !! Macro replacement that calls `lua_pcallk()`.
+        use, intrinsic :: iso_fortran_env, only: INT64
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Number of arguments
         integer,     intent(in) :: nargs
+        !> Maximum number of results to return
         integer,     intent(in) :: nresults
+        !> Pointer to message handler
         integer,     intent(in) :: msgh
-        integer                 :: lua_pcall
 
-        lua_pcall = lua_pcallk(l, nargs, nresults, msgh, int(0, kind=8), c_null_ptr)
+        ! Return value
+        integer                 :: lua_pcall
+        continue
+
+        ! lua_pcall = lua_pcallk(l, nargs, nresults, msgh, int(0, kind=8), c_null_ptr)
+        lua_pcall = lua_pcallk(l, nargs, nresults, msgh, 0_INT64, c_null_ptr)
     end function lua_pcall
 
-    ! lua_Integer lua_tointeger(lua_State *l, int idx)
+    !> @brief Converts the Lua value at the given index to the signed
+    !! integral type `lua_Integer`.
+    !!
+    !! The Lua value must be an integer, or a number or string
+    !! convertible to an integer; otherwise, `lua_tointeger` returns 0
+    !!
+    !! C signature: `lua_Integer lua_tointeger(lua_State *l, int idx)`
+    !!
+    !! @note Fortran wrapper around `lua_tointegerx()` in Lua C API
     function lua_tointeger(l, idx)
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Index of element to convert
         integer,     intent(in) :: idx
+
+        ! Return value
         integer                 :: lua_tointeger
 
         lua_tointeger = lua_tointegerx(l, idx, c_null_ptr)
     end function lua_tointeger
 
-    ! const char *lua_tostring(lua_State *L, int index)
-    function lua_tostring(l, i)
-        !! Wrapper that calls `lua_tolstring()` and converts the returned C
-        !! pointer to Fortran string.
+    !> @brief Wrapper that calls `lua_tolstring()` and converts the returned C
+    !! pointer to a Fortran string.
+    !!
+    !! C signature: `const char *lua_tostring(lua_State *L, int index)`
+    function lua_tostring(l, idx)
+        use, intrinsic :: iso_fortran_env, only: INT64
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in)       :: l
-        integer,     intent(in)       :: i
-        character(len=:), allocatable :: lua_tostring
-        type(c_ptr)                   :: ptr
-        integer(kind=8)               :: size
+        !> Index of stack element to convert
+        integer,     intent(in)       :: idx
 
-        ptr = lua_tolstring(l, i, c_null_ptr)
+        ! Return value
+        character(len=:), allocatable :: lua_tostring
+
+        type(c_ptr)                   :: ptr
+        integer(kind=INT64)           :: size
+        ! integer(kind=8)               :: size
+
+        ptr = lua_tolstring(l, idx, c_null_ptr)
         if (.not. c_associated(ptr)) return
 
         size = c_strlen(ptr)
@@ -1267,17 +1354,24 @@ contains
         call c_f_string_ptr(ptr, lua_tostring)
     end function lua_tostring
 
-    ! const char *lua_typename(lua_State *L, int tp)
+    !> @brief Wrapper that calls `lua_typename_()` and converts the
+    !! returned C pointer to Fortran string.
+    !!
+    !! C signature: `const char *lua_typename(lua_State *L, int tp)`
     function lua_typename(l, tp)
-        !! Wrapper that calls `lua_typename_()` and converts the returned C
-        !! pointer to Fortran string.
-
+        use, intrinsic :: iso_fortran_env, only: INT64
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in)       :: l
+        !> Lua value type code
         integer,     intent(in)       :: tp
+
+        ! Return value
         character(len=:), allocatable :: lua_typename
+
         type(c_ptr)                   :: ptr
-        integer(kind=8)               :: size
+        ! integer(kind=8)               :: size
+        integer(kind=INT64)           :: size
+        continue
 
         ptr = lua_typename_(l, tp)
         if (.not. c_associated(ptr)) return
@@ -1287,28 +1381,34 @@ contains
         call c_f_string_ptr(ptr, lua_typename)
     end function lua_typename
 
-    ! int luaL_dofile(lua_State *L, const char *filename)
+    !> @brief Macro replacement that calls `lual_loadfile()`
+    !! and `lua_pcall()`.
+    !!
+    !! C signature: `int luaL_dofile(lua_State *L, const char *filename)`
     function lual_dofile(l, fn)
-        !! Macro replacement that calls `lual_loadfile()` and `lua_pcall()`.
-
         !> Pointer to Lua interpreter state
         type(c_ptr),      intent(in) :: l
+        !> File name of Lua chunk
         character(len=*), intent(in) :: fn
+        ! Return value
         integer                      :: lual_dofile
 
         lual_dofile = lual_loadfile(l, fn)
 
-        if (lual_dofile == 0) &
+        if (lual_dofile == 0) then
             lual_dofile = lua_pcall(l, 0, LUA_MULTRET, 0)
+        end if
     end function lual_dofile
 
-    ! int luaL_loadfile(lua_State *L, const char *filename)
+    !> @brief Macro replacement that calls `lual_loadfilex()`.
+    !!
+    !! C signature: `int luaL_loadfile(lua_State *L, const char *filename)`
     function lual_loadfile(l, fn)
-        !! Macro replacement that calls `lual_loadfilex()`.
-
         !> Pointer to Lua interpreter state
         type(c_ptr),      intent(in) :: l
+        !> File name of Lua chunk
         character(len=*), intent(in) :: fn
+        ! Return value
         integer                      :: lual_loadfile
 
         lual_loadfile = lual_loadfilex(l, fn // c_null_char, c_null_ptr)
@@ -1317,43 +1417,71 @@ contains
     !> Wrapper for `lual_loadstring()` that null-terminates the given
     !! string.
     !!
-    !! `int luaL_loadstring(lua_State *L, const char *s)`
+    !! C signature: `int luaL_loadstring(lua_State *L, const char *s)`
     function lual_loadstring(l, s)
 
         !> Pointer to Lua interpreter state
         type(c_ptr),      intent(in) :: l
+        !> String to load as a Lua chunk
         character(len=*), intent(in) :: s
+        ! Return value
         integer                      :: lual_loadstring
 
         lual_loadstring = lual_loadstring_(l, s // c_null_char)
     end function lual_loadstring
 
-    ! void lua_call(lua_State *L, int nargs, int nresults)
+    !> @brief Calls a function. Fortran wrapper around `lua_callk`
+    !!
+    !! C signature: `void lua_call(lua_State *L, int nargs, int nresults)`
+    !!
+    !! @note Continuation-function context is hard-coded to `0_INT64`
+    !! (64-bit integer) which may cause problems if `LUA_INTEGER` is
+    !! defined to anything other than `__int64` in `luaconf.h`
     subroutine lua_call(l, nargs, nresults)
-
+        use, intrinsic :: iso_fortran_env, only: INT64
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Number of arguments
         integer,     intent(in) :: nargs
+        !> Maximum number of results
         integer,     intent(in) :: nresults
 
-        call lua_callk(l, nargs, nresults, int(0, kind=8), c_null_ptr)
+        ! call lua_callk(l, nargs, nresults, int(0, kind=8), c_null_ptr)
+        call lua_callk(l, nargs, nresults, 0_INT64, c_null_ptr)
     end subroutine lua_call
 
-    ! void lua_pop(lua_State *l, int n)
+    !> @brief Pops `n` elements from the stack.
+    !!
+    !! @note Fortran wrapper around `lua_settop`
+    !!
+    !! C signature: `void lua_pop(lua_State *l, int n)
     subroutine lua_pop(l, n)
-
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
+        !> Number of stack elements to pop
         integer,     intent(in) :: n
 
         call lua_settop(l, -n - 1)
     end subroutine lua_pop
 
-    ! void lua_pushcfunction(lua_State *L, lua_CFunction f)
+    !> @brief Pushes a C function onto the stack.
+    !!
+    !! This function receives a pointer to a C function and pushes onto
+    !! the stack a Lua value of type function that, when called, invokes
+    !! the corresponding C function.
+    !!
+    !! Any function to be callable by Lua must follow the correct
+    !! protocol to receive its parameters and return its results
+    !! (see lua_CFunction).
+    !!
+    !! @note Fortran wrapper around `lua_pushcclosure`
+    !!
+    !! C signature: `void lua_pushcfunction(lua_State *L, lua_CFunction f)`
     subroutine lua_pushcfunction(l, f)
 
         !> Pointer to Lua interpreter state
         type(c_ptr),    intent(in) :: l
+        !> Pointer to C function
         type(c_funptr), intent(in) :: f
 
         call lua_pushcclosure(l, f, 0)
@@ -1361,7 +1489,7 @@ contains
 
     !> @brief Sets the C function f as the new value of global `name`.
     !!
-    !! `void lua_register(lua_State *L, const char *name, lua_CFunction f)`
+    !! C signature: `void lua_register(lua_State *L, const char *name, lua_CFunction f)`
     subroutine lua_register(l, n, f)
 
         !> Pointer to Lua interpreter state
@@ -1379,13 +1507,14 @@ contains
     !> @name C/Fortran convenience functions
 
     !!!@{
-    !> Utility routine that copies a C string, passed as a C pointer, to a
-    !! Fortran string.
+    !> @brief Utility routine that copies a C string, passed as
+    !! a C pointer, to a Fortran string.
     subroutine c_f_string_ptr(c_string, f_string)
         !> Pointer to C string
         type(c_ptr),      intent(in)           :: c_string
         !> Fortran string
         character(len=*), intent(out)          :: f_string
+
         character(kind=c_char, len=1), pointer :: char_ptrs(:)
         integer                                :: i
         continue
