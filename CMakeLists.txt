@@ -634,9 +634,7 @@ if(ENABLE_UNIT_TESTS)
 
     # TOAST null test
     set(EXAMPLE_DIR "${TEST_BASE_DIR}/unittest")
-    list(APPEND TEST_SOURCES
-        "${UNITTEST_SRC_BASE}/ut_null.f90"
-        "${EXTRAN_DEP_SOURCES}")
+    list(APPEND TEST_SOURCES "${UNITTEST_SRC_BASE}/ut_null.f90")
     add_toast_unit_test(
         TARGET ut_null
         SOURCES ${TEST_SOURCES}
@@ -645,6 +643,20 @@ if(ENABLE_UNIT_TESTS)
         DEBUG
     )
     link_fortran_libraries(ut_null ${FORTRANLUA53LIB_NAME})
+    unset(TEST_SOURCES)
+    unset(EXAMPLE_DIR)
+
+    # TOAST fibonacci test
+    set(EXAMPLE_DIR "${TEST_BASE_DIR}/fibonacci")
+    list(APPEND TEST_SOURCES "${UNITTEST_SRC_BASE}/ut_fibonacci.f90")
+    add_toast_unit_test(
+        TARGET ut_fibonacci
+        SOURCES ${TEST_SOURCES}
+        DEPENDENCIES fortran-lua53_test_setup ${FORTRANLUA53LIB_NAME}
+        RUN_DIRECTORY ${EXAMPLE_DIR}
+        DEBUG
+    )
+    link_fortran_libraries(ut_fibonacci ${FORTRANLUA53LIB_NAME})
     unset(TEST_SOURCES)
     unset(EXAMPLE_DIR)
 endif()
