@@ -160,6 +160,7 @@ include(IncludeLua53)
 ## Build ######################################################################
 ###############################################################################
 
+# -- Set general C options
 unset(CCOPTS)
 
 list(APPEND CCOPTS
@@ -167,8 +168,9 @@ list(APPEND CCOPTS
     ${CCOPT_DEBUG}
 )
 
-message(STATUS "C compiler options for Fortran-Lua53 set to ${FCOPTS}")
+message(STATUS "C compiler options for Fortran-Lua53 set to ${CCOPTS}")
 
+# -- Set general Fortran options
 unset(FCOPTS)
 
 list(APPEND FCOPTS
