@@ -1,0 +1,16 @@
+# fibonacci: success (0 -> true, type(6) = function)
+lua_dofile responded with    0
+lua_getglobal("fib") responded with (type)    6
+lua_isfunction(l, -1) is .true.
+integer x = 10 pushed onto stack
+lua_pcall() responded with    0
+r1 = lua_tointeger(l, -1) =   34
+r2 = lua_tointeger(l, -2) =   55
+lua_pop(l, 2) called; removed r1 an r2 from stack?
+fibonacci(10) = 55
+
+# fibonacci: file not found test (7 -> false, type(0) = nil)
+lua_dofile responded with    7
+lua_getglobal("fib") responded with (type)    0
+lua_isfunction(l, -1) is .false.
+
