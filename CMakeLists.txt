@@ -201,12 +201,9 @@ endif()
 message(STATUS "Fortran compiler options for fortran-lua53 set to ${FCOPTS}")
 
 #=======================================================================
-# Build Lua from retrieved sources (static library liblua)
+# Define Lua 5.3 sources
 #=======================================================================
 
-set(LIBLUA53_NAME lua53)
-
-# Target liblua53: Lua 5.3 sources
 set(LIBLUA53_SOURCE_DIR "${LUA53_SOURCE_DIR}/src")
 
 set(LIBLUA53_CORE_SOURCES
@@ -248,7 +245,14 @@ set(LIBLUA53_LIB_SOURCES
   "${LIBLUA53_SOURCE_DIR}/linit.c"
 )
 
+#=======================================================================
+# Build Lua as static library liblua53
+#=======================================================================
+
+set(LIBLUA53_NAME lua53)
+
 add_library(${LIBLUA53_NAME}
+    STATIC
     ${LIBLUA53_CORE_SOURCES}
     ${LIBLUA53_LIB_SOURCES}
 )
@@ -266,6 +270,33 @@ set_target_properties(${LIBLUA53_NAME}
 install(TARGETS ${LIBLUA53_NAME})
 
 #=======================================================================
+# Build Lua as shared library liblua53_shared
+#
+# NOTE: May not be working. Needed for 'library' example; calling
+# Fortran routines from Lua
+#=======================================================================
+
+set(LIBLUA53SH_NAME lua53_shared)
+
+add_library(${LIBLUA53SH_NAME}
+    SHARED
+    ${LIBLUA53_CORE_SOURCES}
+    ${LIBLUA53_LIB_SOURCES}
+)
+
+target_compile_options(${LIBLUA53SH_NAME} PUBLIC ${CCOPTS})
+target_link_libraries(${LIBLUA53SH_NAME} PUBLIC m)
+
+set_target_properties(${LIBLUA53SH_NAME}
+    PROPERTIES
+    # POSITION_INDEPENDENT_CODE ON
+    # OUTPUT_NAME lua53
+    DEPENDS LUA53_external
+)
+
+install(TARGETS ${LIBLUA53SH_NAME})
+
+#=======================================================================
 # Build lua53 compiler
 #=======================================================================
 
@@ -279,7 +310,7 @@ add_executable(${LUAC53_NAME}
     ${LUAC53_SOURCES}
 )
 
-target_compile_options(${LIBLUA53_NAME} PUBLIC ${CCOPTS})
+target_compile_options(${LUAC53_NAME} PUBLIC ${CCOPTS})
 target_include_directories(${LUAC53_NAME} PUBLIC ${LIBLUA53_SOURCE_DIR})
 target_link_libraries(${LUAC53_NAME} PUBLIC ${LIBLUA53_NAME})
 
@@ -305,9 +336,11 @@ add_executable(${LUATERP53_NAME}
     ${LUATERP53_SOURCES}
 )
 
-target_compile_options(${LIBLUA53_NAME} PUBLIC ${CCOPTS})
+target_compile_options(${LUATERP53_NAME} PUBLIC ${CCOPTS})
 target_include_directories(${LUATERP53_NAME} PUBLIC ${LIBLUA53_SOURCE_DIR})
-target_link_libraries(${LUATERP53_NAME} PUBLIC ${LIBLUA53_NAME})
+# Q: Should interpreter be built against Lua shared library?
+target_link_libraries(${LUATERP53_NAME} PUBLIC ${LIBLUA53SH_NAME})
+# target_link_libraries(${LUATERP53_NAME} PUBLIC ${LIBLUA53_NAME})
 
 set_target_properties(${LUATERP53_NAME}
     PROPERTIES
@@ -318,12 +351,8 @@ set_target_properties(${LUATERP53_NAME}
 install(TARGETS ${LUATERP53_NAME})
 
 #=======================================================================
-# Build fortran-lua53 as a static library
+# Define fortran-lua53 source
 #=======================================================================
-
-# Set target name FORTRANLUA53_NAME to fortranlua53
-set(FORTRANLUA53LIB_NAME fortranlua53)
-
 
 # Target fortran-lua53: fortran-lua53 library sources
 set(FORTRANLUA53_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -332,6 +361,13 @@ set(FORTRANLUA53_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FORTRANLUA53_SOURCES
     "${FORTRANLUA53_SOURCE_DIR}/lua.f90"
 )
+
+#=======================================================================
+# Build fortran-lua53 as a static library
+#=======================================================================
+
+# Set target name FORTRANLUA53_NAME to fortranlua53
+set(FORTRANLUA53LIB_NAME fortranlua53)
 
 # # Apply FCOPTS only to Fortran source files
 # set_source_files_properties(
@@ -346,7 +382,7 @@ set(FORTRANLUA53LIB_FORTRAN_MODULE_DIR
 )
 file(MAKE_DIRECTORY "${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}")
 
-add_library(${FORTRANLUA53LIB_NAME} ${FORTRANLUA53_SOURCES})
+add_library(${FORTRANLUA53LIB_NAME} STATIC ${FORTRANLUA53_SOURCES})
 target_compile_options(${FORTRANLUA53LIB_NAME} PUBLIC ${FCOPTS})
 target_include_directories(${FORTRANLUA53LIB_NAME} PUBLIC ${FORTRANLUA53_SOURCE_DIR})
 target_link_libraries(${FORTRANLUA53LIB_NAME} PUBLIC ${LIBLUA53_NAME})
@@ -378,6 +414,39 @@ install(DIRECTORY "${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}/"
 )
 
 #=======================================================================
+# Build fortran-lua53 as a shared library
+
+# NOTE: May Not be working. Needed for 'library' example; calling
+# Fortran routines from Lua
+#=======================================================================
+
+# # Set target name FORTRANLUA53SHLIB_NAME to fortranlua53_shared
+# set(FORTRANLUA53SHLIB_NAME fortranlua53_shared)
+
+# # Define FORTRANLUA53 sharedlibrary artifact
+# set(FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR
+#     "${CMAKE_CURRENT_BINARY_DIR}/${FORTRANLUA53SHLIB_NAME}_include"
+# )
+# file(MAKE_DIRECTORY "${FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR}")
+
+# add_library(${FORTRANLUA53SHLIB_NAME} SHARED ${FORTRANLUA53_SOURCES})
+# target_compile_options(${FORTRANLUA53SHLIB_NAME} PUBLIC ${FCOPTS})
+# target_include_directories(${FORTRANLUA53SHLIB_NAME} PUBLIC ${FORTRANLUA53_SOURCE_DIR})
+# target_link_libraries(${FORTRANLUA53SHLIB_NAME} PUBLIC ${LIBLUA53SH_NAME})
+
+# set_target_properties(
+#     ${FORTRANLUA53SHLIB_NAME}
+#     PROPERTIES
+#     Fortran_MODULE_DIRECTORY ${FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR}
+#     # POSITION_INDEPENDENT_CODE ON
+#     DEPENDS ${LIBLUA53SH_NAME}
+# )
+
+# if(ENABLE_COVERAGE)
+#     add_coverage(${FORTRANLUA53SHLIB_NAME})
+# endif()
+
+#=======================================================================
 # Create test applications
 #=======================================================================
 
@@ -400,19 +469,26 @@ link_fortran_libraries(${FIBONACCI_NAME} ${FORTRANLUA53LIB_NAME})
 
 target_compile_options(${FIBONACCI_NAME} PUBLIC ${FCOPTS})
 
-# if(ENABLE_COVERAGE)
-#     add_coverage(${FIBONACCI_NAME})
-# endif()
+if(ENABLE_COVERAGE)
+    add_coverage(${FIBONACCI_NAME})
+endif()
 
 install(TARGETS ${FIBONACCI_NAME})
 
 #=======================================================================
 # Create test Fortran library callable from Lua: fhello
-#=======================================================================
-
 # TODO: FIX THIS
 # Requires shared libraries to work; setting target properties to
 # POSITION_INDEPENDENT_CODE ON did not help.
+# Tried building against shared libraries but keep getting error:
+# ./lua53: error loading module 'fortran' from file './fortran.so':
+#         dynamic libraries not enabled; check your Lua installation
+# stack traceback:
+#         [C]: in ?
+#         [C]: in function 'require'
+#         example.lua:2: in main chunk
+#         [C]: in ?
+#=======================================================================
 
 # set(FHELLOLIB_NAME fhello)
 # # Define sources for Fortran library containing Lua-visible hello() routine
@@ -423,8 +499,8 @@ install(TARGETS ${FIBONACCI_NAME})
 # set(FORTRANLUA53LIB_FORTRAN_MODULE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${FHELLOLIB_NAME}_include")
 # file(MAKE_DIRECTORY "${FHELLOLIB_FORTRAN_MODULE_DIR}")
 # add_library(${FHELLOLIB_NAME} SHARED ${FHELLOLIB_SOURCES})
-# target_link_libraries(${FHELLOLIB_NAME} ${LIBLUA53_NAME})
-# link_fortran_libraries(${FHELLOLIB_NAME} ${FORTRANLUA53LIB_NAME})
+# target_link_libraries(${FHELLOLIB_NAME} ${LIBLUA53SH_NAME})
+# link_fortran_libraries(${FHELLOLIB_NAME} ${FORTRANLUA53SHLIB_NAME})
 
 # target_compile_options(${FHELLOLIB_NAME} PUBLIC ${FCOPTS})
 
@@ -447,9 +523,9 @@ link_fortran_libraries(${XSTRING_NAME} ${FORTRANLUA53LIB_NAME})
 
 target_compile_options(${XSTRING_NAME} PUBLIC ${FCOPTS})
 
-# if(ENABLE_COVERAGE)
-#     add_coverage(${XSTRING_NAME})
-# endif()
+if(ENABLE_COVERAGE)
+    add_coverage(${XSTRING_NAME})
+endif()
 
 install(TARGETS ${XSTRING_NAME})
 
