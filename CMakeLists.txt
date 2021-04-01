@@ -420,27 +420,27 @@ install(DIRECTORY "${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}/"
 # Fortran routines from Lua
 #=======================================================================
 
-# # Set target name FORTRANLUA53SHLIB_NAME to fortranlua53_shared
-# set(FORTRANLUA53SHLIB_NAME fortranlua53_shared)
+# Set target name FORTRANLUA53SHLIB_NAME to fortranlua53_shared
+set(FORTRANLUA53SHLIB_NAME fortranlua53_shared)
 
-# # Define FORTRANLUA53 sharedlibrary artifact
-# set(FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR
-#     "${CMAKE_CURRENT_BINARY_DIR}/${FORTRANLUA53SHLIB_NAME}_include"
-# )
-# file(MAKE_DIRECTORY "${FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR}")
+# Define FORTRANLUA53 sharedlibrary artifact
+set(FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR
+    "${CMAKE_CURRENT_BINARY_DIR}/${FORTRANLUA53SHLIB_NAME}_include"
+)
+file(MAKE_DIRECTORY "${FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR}")
 
-# add_library(${FORTRANLUA53SHLIB_NAME} SHARED ${FORTRANLUA53_SOURCES})
-# target_compile_options(${FORTRANLUA53SHLIB_NAME} PUBLIC ${FCOPTS})
-# target_include_directories(${FORTRANLUA53SHLIB_NAME} PUBLIC ${FORTRANLUA53_SOURCE_DIR})
-# target_link_libraries(${FORTRANLUA53SHLIB_NAME} PUBLIC ${LIBLUA53SH_NAME})
+add_library(${FORTRANLUA53SHLIB_NAME} SHARED ${FORTRANLUA53_SOURCES})
+target_compile_options(${FORTRANLUA53SHLIB_NAME} PUBLIC ${FCOPTS})
+target_include_directories(${FORTRANLUA53SHLIB_NAME} PUBLIC ${FORTRANLUA53_SOURCE_DIR})
+target_link_libraries(${FORTRANLUA53SHLIB_NAME} PUBLIC ${LIBLUA53SH_NAME} ${CMAKE_DL_LIBS})
 
-# set_target_properties(
-#     ${FORTRANLUA53SHLIB_NAME}
-#     PROPERTIES
-#     Fortran_MODULE_DIRECTORY ${FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR}
-#     # POSITION_INDEPENDENT_CODE ON
-#     DEPENDS ${LIBLUA53SH_NAME}
-# )
+set_target_properties(
+    ${FORTRANLUA53SHLIB_NAME}
+    PROPERTIES
+    Fortran_MODULE_DIRECTORY ${FORTRANLUA53SHLIB_FORTRAN_MODULE_DIR}
+    # POSITION_INDEPENDENT_CODE ON
+    DEPENDS ${LIBLUA53SH_NAME}
+)
 
 # if(ENABLE_COVERAGE)
 #     add_coverage(${FORTRANLUA53SHLIB_NAME})
@@ -489,6 +489,24 @@ install(TARGETS ${FIBONACCI_NAME})
 #         example.lua:2: in main chunk
 #         [C]: in ?
 #=======================================================================
+
+set(FHELLOLIB_NAME fhello)
+# Define sources for Fortran library containing Lua-visible hello() routine
+set(FHELLOLIB_SOURCES
+    "${EXAMPLE_SOURCE_DIR}/f_from_lua/fhello.f90"
+)
+
+set(FHELLOLIB_FORTRAN_MODULE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${FHELLOLIB_NAME}_include")
+file(MAKE_DIRECTORY "${FHELLOLIB_FORTRAN_MODULE_DIR}")
+add_library(${FHELLOLIB_NAME} SHARED ${FHELLOLIB_SOURCES})
+target_link_libraries(${FHELLOLIB_NAME} ${FORTRANLUA53SHLIB_NAME} ${LIBLUA53SH_NAME} ${CMAKE_DL_LIBS})
+link_fortran_libraries(${FHELLOLIB_NAME} ${FORTRANLUA53SHLIB_NAME})
+
+target_compile_options(${FHELLOLIB_NAME} PUBLIC ${FCOPTS})
+
+# install(TARGETS ${FHELLOLIB_NAME})
+
+# -- Original `library` test
 
 # set(FHELLOLIB_NAME fhello)
 # # Define sources for Fortran library containing Lua-visible hello() routine
