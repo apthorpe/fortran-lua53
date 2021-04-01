@@ -285,7 +285,7 @@ add_library(${LIBLUA53SH_NAME}
 )
 
 target_compile_options(${LIBLUA53SH_NAME} PUBLIC ${CCOPTS})
-target_link_libraries(${LIBLUA53SH_NAME} PUBLIC m)
+target_link_libraries(${LIBLUA53SH_NAME} PUBLIC m ${CMAKE_DL_LIBS})
 
 set_target_properties(${LIBLUA53SH_NAME}
     PROPERTIES
@@ -416,7 +416,7 @@ install(DIRECTORY "${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}/"
 #=======================================================================
 # Build fortran-lua53 as a shared library
 
-# NOTE: May Not be working. Needed for 'library' example; calling
+# NOTE: May not be working. Needed for 'library' example; calling
 # Fortran routines from Lua
 #=======================================================================
 
@@ -499,7 +499,7 @@ install(TARGETS ${FIBONACCI_NAME})
 # set(FORTRANLUA53LIB_FORTRAN_MODULE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${FHELLOLIB_NAME}_include")
 # file(MAKE_DIRECTORY "${FHELLOLIB_FORTRAN_MODULE_DIR}")
 # add_library(${FHELLOLIB_NAME} SHARED ${FHELLOLIB_SOURCES})
-# target_link_libraries(${FHELLOLIB_NAME} ${LIBLUA53SH_NAME})
+# target_link_libraries(${FHELLOLIB_NAME} ${LIBLUA53SH_NAME} ${CMAKE_DL_LIBS})
 # link_fortran_libraries(${FHELLOLIB_NAME} ${FORTRANLUA53SHLIB_NAME})
 
 # target_compile_options(${FHELLOLIB_NAME} PUBLIC ${FCOPTS})
