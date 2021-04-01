@@ -9,7 +9,7 @@
 !! `example.lua`.
 module fhello
     use, intrinsic :: iso_c_binding, only: c_int, c_funloc, c_ptr
-    use :: lua
+    use :: lua, only: lua_register
     implicit none
 
     public :: luaopen_fhello   ! Module registration function.
