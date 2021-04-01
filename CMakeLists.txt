@@ -256,6 +256,7 @@ target_link_libraries(${LIBLUA53_NAME} PUBLIC m)
 
 set_target_properties(${LIBLUA53_NAME}
     PROPERTIES
+    # POSITION_INDEPENDENT_CODE ON
     # OUTPUT_NAME lua53
     DEPENDS LUA53_external
 )
@@ -325,14 +326,6 @@ set(FORTRANLUA53LIB_NAME fortranlua53)
 # Target fortran-lua53: fortran-lua53 library sources
 set(FORTRANLUA53_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-# set(FORTRANLUA53_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/fortran-lua53_generated_src")
-# file(MAKE_DIRECTORY "${FORTRANLUA53_GENERATED_DIR}")
-
-# set(FORTRANLUA53_VERSION_TEMPLATE "${FORTRANLUA53_SOURCE_DIR}/fortran-lua53_version.f90.in")
-# set(FORTRANLUA53_VERSION_FILE "${FORTRANLUA53_GENERATED_DIR}/fortran-lua53_version.f90")
-# configure_file("${FORTRANLUA53_VERSION_TEMPLATE}"
-#     "${FORTRANLUA53_VERSION_FILE}" @ONLY)
-
 # Define Fortran sources for fortran-lua53 library
 set(FORTRANLUA53_SOURCES
     "${FORTRANLUA53_SOURCE_DIR}/lua.f90"
@@ -345,21 +338,10 @@ set(FORTRANLUA53_SOURCES
 #     COMPILE_OPTIONS "${FCOPTS}"
 # )
 
-# # Define C sources for fortran-lua53 library
-# set(FORTRANLUA53_DEP_C_SOURCES
-#     "${FORTRANLUA53_SOURCE_DIR}/csqlite.c"
-#     "${SQLITE3_SOURCE_DIR}/sqlite3.c"
-# )
-
-# # Apply CCOPTS only to C source files
-# set_source_files_properties(
-#     ${FORTRANLUA53_DEP_C_SOURCES}
-#     PROPERTIES
-#     COMPILE_OPTIONS "${CCOPTS}"
-# )
-
 # Define FORTRANLUA53 library artifact
-set(FORTRANLUA53LIB_FORTRAN_MODULE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${FORTRANLUA53LIB_NAME}_include")
+set(FORTRANLUA53LIB_FORTRAN_MODULE_DIR
+    "${CMAKE_CURRENT_BINARY_DIR}/${FORTRANLUA53LIB_NAME}_include"
+)
 file(MAKE_DIRECTORY "${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}")
 
 add_library(${FORTRANLUA53LIB_NAME} ${FORTRANLUA53_SOURCES})
@@ -371,10 +353,13 @@ set_target_properties(
     ${FORTRANLUA53LIB_NAME}
     PROPERTIES
     Fortran_MODULE_DIRECTORY ${FORTRANLUA53LIB_FORTRAN_MODULE_DIR}
+    # POSITION_INDEPENDENT_CODE ON
     DEPENDS ${LIBLUA53_NAME}
 )
 
-# add_coverage(${FORTRANLUA53LIB_NAME})
+if(ENABLE_COVERAGE)
+    add_coverage(${FORTRANLUA53LIB_NAME})
+endif()
 
 # This is needed on Linux but not on Windows
 # target_link_libraries(${FORTRANLUA53LIB_NAME} Threads::Threads ${CMAKE_DL_LIBS})
@@ -413,13 +398,19 @@ link_fortran_libraries(${FIBONACCI_NAME} ${FORTRANLUA53LIB_NAME})
 
 target_compile_options(${FIBONACCI_NAME} PUBLIC ${FCOPTS})
 
+# if(ENABLE_COVERAGE)
+#     add_coverage(${FIBONACCI_NAME})
+# endif()
+
 install(TARGETS ${FIBONACCI_NAME})
 
 #=======================================================================
 # Create test Fortran library callable from Lua: fhello
 #=======================================================================
 
-# TODO: FIX THIS ON WINDOWS 10
+# TODO: FIX THIS
+# Requires shared libraries to work; setting target properties to
+# POSITION_INDEPENDENT_CODE ON did not help.
 
 # set(FHELLOLIB_NAME fhello)
 # # Define sources for Fortran library containing Lua-visible hello() routine
@@ -442,7 +433,7 @@ install(TARGETS ${FIBONACCI_NAME})
 #=======================================================================
 
 set(XSTRING_NAME string)
-# Define sources for fibonacci test executable
+# Define sources for string test executable
 set(XSTRING_SOURCES
     "${EXAMPLE_SOURCE_DIR}/string/string.f90"
 )
@@ -453,6 +444,10 @@ target_link_libraries(${XSTRING_NAME} ${LIBLUA53_NAME})
 link_fortran_libraries(${XSTRING_NAME} ${FORTRANLUA53LIB_NAME})
 
 target_compile_options(${XSTRING_NAME} PUBLIC ${FCOPTS})
+
+# if(ENABLE_COVERAGE)
+#     add_coverage(${XSTRING_NAME})
+# endif()
 
 install(TARGETS ${XSTRING_NAME})
 
