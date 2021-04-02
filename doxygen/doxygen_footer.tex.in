@@ -1,6 +1,8 @@
 % Latex footer for doxygen 1.8.18
 %--- End generated contents ---
 
+\part{End Matter}
+
 % References
 \newpage
 \phantomsection
