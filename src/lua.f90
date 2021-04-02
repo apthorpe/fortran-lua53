@@ -60,6 +60,8 @@ module lua
     public :: lua_status
     public :: lua_tointeger
     public :: lua_tointegerx
+    public :: lua_tonumber
+    public :: lua_tonumberx
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
@@ -522,6 +524,27 @@ module lua
             ! Return value
             integer(kind=c_int)                    :: lua_tointegerx
         end function lua_tointegerx
+
+        !> @brief Converts the Lua value at the given index to the C type `lua_Number`.
+        !!
+        !! The Lua value must be a number or a string convertible to a
+        !! number; otherwise, `lua_tonumberx` returns 0.
+        !!
+        !! If `isnum` is not `NULL`, its referent is assigned a boolean
+        !! value that indicates whether the operation succeeded.
+        !!
+        !! C signature: `lua_Number lua_tonumberx (lua_State *L, int index, int *isnum);`
+        function lua_tonumberx(l, idx, isnum) bind(c, name='lua_tonumberx')
+            import :: c_int, c_ptr, c_double
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of entry to convert
+            integer(kind=c_int), intent(in), value :: idx
+            !> Operation success flag
+            type(c_ptr),         intent(in), value :: isnum
+            ! Return value
+            real(kind=c_double)                    :: lua_tonumberx
+        end function lua_tonumberx
 
         !> @brief Converts the Lua value at the given index to a C
         !! string.
@@ -1295,7 +1318,6 @@ contains
     !!
     !! @note Fortran wrapper around `lua_tointegerx()` in Lua C API
     function lua_tointeger(l, idx)
-
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
         !> Index of element to convert
@@ -1309,6 +1331,31 @@ contains
 
         return
     end function lua_tointeger
+
+    !> @brief Converts the Lua value at the given index to the signed
+    !! real type `lua_Number`.
+    !!
+    !! The Lua value must be an number or a string convertible to a
+    !! number; otherwise, `lua_tonumber` returns 0
+    !!
+    !! C signature: `lua_Number lua_tonumber (lua_State *L, int index)`
+    !!
+    !! @note Fortran wrapper around `lua_tonumberx()` in Lua C API
+    function lua_tonumber(l, idx)
+        use, intrinsic :: iso_fortran_env, only: REAL64
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to convert
+        integer,     intent(in) :: idx
+
+        ! Return value
+        real(kind=REAL64)                 :: lua_tonumber
+        continue
+
+        lua_tonumber = real(lua_tonumberx(l, idx, c_null_ptr), kind=REAL64)
+
+        return
+    end function lua_tonumber
 
     !> @brief Wrapper that calls `lua_tolstring()` and converts the returned C
     !! pointer to a Fortran string.
