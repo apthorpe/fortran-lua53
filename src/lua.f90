@@ -347,85 +347,85 @@ module lua
         !! C function, and 0 otherwise.
         !!
         !! C signature: `int lua_iscfunction(lua_State *L, int idx)`
-        function lua_iscfunction(l, idx) bind(c, name='lua_iscfunction')
+        function lua_iscfunction_(l, idx) bind(c, name='lua_iscfunction')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
-            integer(kind=c_int)                    :: lua_iscfunction
-        end function lua_iscfunction
+            integer(kind=c_int)                    :: lua_iscfunction_
+        end function lua_iscfunction_
 
         !> @brief Returns 1 if the value at the given index is an
         !! integer (that is, the value is a number and is represented
         !! as an integer), and 0 otherwise.
         !!
         !! C signature: `int lua_isinteger(lua_State *L, int idx)`
-        function lua_isinteger(l, idx) bind(c, name='lua_isinteger')
+        function lua_isinteger_(l, idx) bind(c, name='lua_isinteger')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
-            integer(kind=c_int)                    :: lua_isinteger
-        end function lua_isinteger
+            integer(kind=c_int)                    :: lua_isinteger_
+        end function lua_isinteger_
 
         !> @brief Returns 1 if the value at the given index is a number
         !! or a string convertible to a number, and 0 otherwise.
         !!
         !! C signature: `int lua_isnumber(lua_State *L, int idx)`
-        function lua_isnumber(l, idx) bind(c, name='lua_isnumber')
+        function lua_isnumber_(l, idx) bind(c, name='lua_isnumber')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
-            integer(kind=c_int)                    :: lua_isnumber
-        end function lua_isnumber
+            integer(kind=c_int)                    :: lua_isnumber_
+        end function lua_isnumber_
 
         !> @brief Returns 1 if the value at the given index is a string
         !! or a number (which is always convertible to a string), and 0
         !! otherwise.
         !!
         !! C signature: `int lua_isstring(lua_State *L, int idx)`
-        function lua_isstring(l, idx) bind(c, name='lua_isstring')
+        function lua_isstring_(l, idx) bind(c, name='lua_isstring')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
-            integer(kind=c_int)                    :: lua_isstring
-        end function lua_isstring
+            integer(kind=c_int)                    :: lua_isstring_
+        end function lua_isstring_
 
         !> @brief Returns 1 if the value at the given index is a
         !! userdata (either full or light), and 0 otherwise.
         !!
         !! C signature: `int lua_isuserdata(lua_State *L, int idx)`
-        function lua_isuserdata(l, idx) bind(c, name='lua_isuserdata')
+        function lua_isuserdata_(l, idx) bind(c, name='lua_isuserdata')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of element to test
             integer(kind=c_int), intent(in), value :: idx
             ! Return value
-            integer(kind=c_int)                    :: lua_isuserdata
-        end function lua_isuserdata
+            integer(kind=c_int)                    :: lua_isuserdata_
+        end function lua_isuserdata_
 
         !> @brief Returns 1 if the given coroutine can yield, and 0
         !! otherwise.
         !!
         !! C signature: `int lua_isyieldable(lua_State *L)`
-        function lua_isyieldable(l) bind(c, name='lua_isyielable')
+        function lua_isyieldable_(l) bind(c, name='lua_isyieldable')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr), intent(in), value :: l
             ! Return value
-            integer(kind=c_int)            :: lua_isyieldable
-        end function lua_isyieldable
+            integer(kind=c_int)            :: lua_isyieldable_
+        end function lua_isyieldable_
 
         !> @brief Loads a Lua chunk without running it.
         !!
@@ -1148,6 +1148,24 @@ contains
     end function lua_isboolean
 
     !> @brief Macro replacement that returns whether the stack variable
+    !! is a C function.
+    !!
+    !! C signature: `int lua_iscfunction(lua_State *L, int idx)`
+    function lua_iscfunction(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        ! Return value
+        logical                 :: lua_iscfunction
+        continue
+
+        lua_iscfunction = (lua_iscfunction_(l, idx) == 1)
+
+        return
+    end function lua_iscfunction
+
+    !> @brief Macro replacement that returns whether the stack variable
     !! is a function.
     !!
     !! C signature: `int lua_isfunction(lua_State *L, int index)`
@@ -1164,6 +1182,24 @@ contains
 
         return
     end function lua_isfunction
+
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is an integer.
+    !!
+    !! C signature: `int lua_isinteger(lua_State *L, int idx)`
+    function lua_isinteger(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        ! Return value
+        logical                 :: lua_isinteger
+        continue
+
+        lua_isinteger = (lua_isinteger_(l, idx) == 1)
+
+        return
+    end function lua_isinteger
 
     !> @brief Macro replacement that returns whether the stack variable
     !! is a light userdata
@@ -1242,6 +1278,42 @@ contains
     end function lua_isnoneornil
 
     !> @brief Macro replacement that returns whether the stack variable
+    !! is a number.
+    !!
+    !! C signature: `int lua_isnumber(lua_State *L, int idx)`
+    function lua_isnumber(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        ! Return value
+        logical                 :: lua_isnumber
+        continue
+
+        lua_isnumber = (lua_isnumber_(l, idx) == 1)
+
+        return
+    end function lua_isnumber
+
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is a string.
+    !!
+    !! C signature: `int lua_isstring(lua_State *L, int idx)`
+    function lua_isstring(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        ! Return value
+        logical                 :: lua_isstring
+        continue
+
+        lua_isstring = (lua_isstring_(l, idx) == 1)
+
+        return
+    end function lua_isstring
+
+    !> @brief Macro replacement that returns whether the stack variable
     !! is a table.
     !!
     !! C signature: `int lua_istable(lua_State *L, int index)`
@@ -1278,6 +1350,40 @@ contains
 
         return
     end function lua_isthread
+
+    !> @brief Macro replacement that returns whether the stack variable
+    !! is a userdata.
+    !!
+    !! C signature: `int lua_isuserdata(lua_State *L, int idx)`
+    function lua_isuserdata(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        ! Return value
+        logical                 :: lua_isuserdata
+        continue
+
+        lua_isuserdata = (lua_isuserdata_(l, idx) == 1)
+
+        return
+    end function lua_isuserdata
+
+    !> @brief Macro replacement that returns whether the given coroutine
+    !! can yield.
+    !!
+    !! C signature: `int lua_isyieldable(lua_State *L)`
+    function lua_isyieldable(l)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        ! Return value
+        logical                 :: lua_isyieldable
+        continue
+
+        lua_isyieldable = (lua_isyieldable_(l) == 1)
+
+        return
+    end function lua_isyieldable
 
     !> @brief Macro replacement that calls `lua_pcallk()`.
     !!

@@ -14,16 +14,16 @@ program ut_typecheck
 
     ! Lua state object
     type(c_ptr) :: l
-    integer     :: nargs    = 1
-    integer     :: nresults = 2
+    ! integer     :: nargs    = 1
+    ! integer     :: nresults = 2
     integer     :: rc
-    integer     :: r1, r2   = 0
-    integer     :: x        = 10
+    ! integer     :: r1, r2   = 0
+    ! integer     :: x        = 10
 
     character(len=32) :: fname
 
     logical :: tf
-    logical :: is_fn
+    ! logical :: is_fn
 
     integer(kind=INT64) :: igv1
     real(kind=WP) :: dgv2
@@ -50,20 +50,20 @@ program ut_typecheck
     ! gv1 = -12
     rc = lua_getglobal(l, 'gv1')
     call test%assertequal(rc, LUA_TNUMBER, message="gv1 is type LUA_TNUMBER")
-    rc = lua_isnumber(l, -1)
-    call test%assertequal(rc, 1, message="lua_isnumber(gv1) is 1")
-    rc = lua_isinteger(l, -1)
-    call test%assertequal(rc, 1, message="lua_isinteger(gv1) is 1")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv1) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv1) is .true.")
     igv1 = lua_tointeger(l, -1)
     call test%assertequal(igv1, -12_INT64, message="lua_tointeger(gv1) == -12_INT64")
 
     ! gv2 = 0.25
     rc = lua_getglobal(l, 'gv2')
     call test%assertequal(rc, LUA_TNUMBER, message="gv2 is type LUA_TNUMBER")
-    rc = lua_isnumber(l, -1)
-    call test%assertequal(rc, 1, message="lua_isnumber(gv2) is 1")
-    rc = lua_isinteger(l, -1)
-    call test%assertequal(rc, 0, message="lua_isinteger(gv2) is 0")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%assertfalse(tf, message="lua_isinteger(gv2) is .false.")
     dgv2 = lua_tonumber(l, -1)
     call test%assertequal(dgv2, 0.25_WP, message="lua_tonumber(gv2) == 0.25_REAL64")
     ! write(unit=stdout, fmt="(A, ES18.11)") "gv2 = ", dgv2
@@ -81,8 +81,8 @@ program ut_typecheck
     call test%assertequal(rc, LUA_TFUNCTION, message="gv5 is type LUA_TFUNCTION)")
     tf = lua_isfunction(l, -1)
     call test%asserttrue(tf, message="lua_isfunction(gv5) is .true.")
-    rc = lua_iscfunction(l, -1)
-    call test%assertequal(rc, 0, message="lua_iscfunction(gv5) is 0")
+    tf = lua_iscfunction(l, -1)
+    call test%assertfalse(tf, message="lua_iscfunction(gv5) is .false.")
 
     ! gv6 = false
     rc = lua_getglobal(l, 'gv6')
