@@ -1,15 +1,27 @@
 \chapter{Introduction}
 
-Fortran 2008 interface bindings to Lua 5.3
+\texttt{fortran-lua53} provides Fortran 2008 interface bindings to Lua~5.3
 
 \section{Project Goals}
 
 The initial goals of the \texttt{fortran-lua53} project are to:
 
 \begin{itemize}
-    \item Build Philipp Engel's Fortran interface to Lua 5.3; see \url{https://github.com/interkosmos/fortran-lua53}
+    \item Build Philipp Engel's Fortran interface to Lua~5.3; see \url{https://github.com/interkosmos/fortran-lua53}
     \item Create a sustainable cross-platform build/test/packaging
-          process based on CMake/CTest/CPack (see \url{https://cmake.org/}),
-    \item Create formal documentation in PDF format using Doxygen (see \url{https://www.doxygen.nl/index.html}),
+          process based on CMake/CTest/CPack; see \url{https://cmake.org/}
+    \item Create formal documentation in PDF format using Doxygen; see \url{https://www.doxygen.nl/index.html}
+    \item Extend existing documentation with Lua C API documentation; see \cite{Lua53Manual}
+\end{itemize}
+
+Secondary goals include:
+
+\begin{itemize}
+    \item Assure consistent behavior in Fortran API, \textit{e.g.} \texttt{lua\_isstring()}
+          returns a Fortran \texttt{LOGICAL} type \texttt{vs} (1/0) representing (true/false)
+    \item Add unit tests to validate functionality and demonstrate usage
+    \item Extend Fortran API as necessary, \textit{e.g.} add \texttt{lua\_tonumber()} for obtaining floating point values from Lua's numerical type
+    \item Investigate porting Aotus (\url{https://apes.osdn.io/pages/aotus}) from \texttt{LuaFortran} to \texttt{fortran-lua53}
+    \item Investigate supporting Lua~5.4.
 \end{itemize}
 
