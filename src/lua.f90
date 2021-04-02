@@ -8,7 +8,7 @@
 
 !> @brief A collection of ISO C binding interfaces to Lua 5.3 for Fortran 2003.
 !!
-!! See https://www.lua.org/manual/5.3/manual.html for details.
+!! See @cite Lua53Manual for details.
 module lua
     use, intrinsic :: iso_c_binding
     implicit none
