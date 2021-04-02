@@ -1,10 +1,10 @@
 !> @file ut_fibonacci.f90
 !! @author Bob Apthorpe
 !! @copyright See LICENSE
-!! @brief Null unit test to verify TOAST library is properly linked
+!! @brief Unit test replicating the fibonacci example
 
-!> @brief Null unit test to verify TOAST library is properly linked
-program ut_null
+!> @brief Unit test replicating the fibonacci example
+program ut_fibonacci
     use, intrinsic :: iso_fortran_env, only: WP => REAL64
     use, intrinsic :: iso_c_binding, only: c_ptr
     use :: lua
@@ -89,7 +89,7 @@ program ut_null
 
     ! Print summary at the end
     call printsummary(test)
-    call jsonwritetofile(test, "ut_null.json")
+    call jsonwritetofile(test, "ut_fibonacci.json")
 
     call test%checkfailure()
-end program ut_null
+end program ut_fibonacci
