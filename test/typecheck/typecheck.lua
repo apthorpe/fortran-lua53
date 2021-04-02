@@ -4,7 +4,7 @@
 local lv1 = -12
 -- v2 is a real
 local lv2 = 0.25
--- v3 is a string`
+-- v3 is a string
 local lv3 = "onion"
 -- v4 is a table
 local lv4 = {}
@@ -23,7 +23,7 @@ lv5()
 gv1 = -12
 -- gv2 is a real
 gv2 = 0.25
--- gv3 is a string`
+-- gv3 is a string
 gv3 = "parfait"
 -- gv4 is a table
 gv4 = {}
