@@ -659,6 +659,20 @@ if(ENABLE_UNIT_TESTS)
     link_fortran_libraries(ut_fibonacci ${FORTRANLUA53LIB_NAME})
     unset(TEST_SOURCES)
     unset(EXAMPLE_DIR)
+
+    # TOAST typecheck test
+    set(EXAMPLE_DIR "${TEST_BASE_DIR}/typecheck")
+    list(APPEND TEST_SOURCES "${UNITTEST_SRC_BASE}/ut_typecheck.f90")
+    add_toast_unit_test(
+        TARGET ut_typecheck
+        SOURCES ${TEST_SOURCES}
+        DEPENDENCIES fortran-lua53_test_setup ${FORTRANLUA53LIB_NAME}
+        RUN_DIRECTORY ${EXAMPLE_DIR}
+        DEBUG
+    )
+    link_fortran_libraries(ut_typecheck ${FORTRANLUA53LIB_NAME})
+    unset(TEST_SOURCES)
+    unset(EXAMPLE_DIR)
 endif()
 
 ###############################################################################
