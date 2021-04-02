@@ -71,10 +71,14 @@ program ut_typecheck
     ! gv3 = "parfait"
     rc = lua_getglobal(l, 'gv3')
     call test%assertequal(rc, LUA_TSTRING, message="gv3 is type LUA_TSTRING")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv3) is .true.")
 
     ! gv4 = {}
     rc = lua_getglobal(l, 'gv4')
     call test%assertequal(rc, LUA_TTABLE, message="gv4 is type LUA_TTABLE")
+    tf = lua_istable(l, -1)
+    call test%asserttrue(tf, message="lua_istable(gv4) is .true.")
 
     ! gv5 = function () print("parfait") end
     rc = lua_getglobal(l, 'gv5')
@@ -88,15 +92,19 @@ program ut_typecheck
     rc = lua_getglobal(l, 'gv6')
     call test%assertequal(rc, LUA_TBOOLEAN, message="gv6 is type LUA_TBOOLEAN")
     tf = lua_isboolean(l, -1)
-    call test%asserttrue(tf, message="lua_boolean(gv6) is .true.")
+    call test%asserttrue(tf, message="lua_isboolean(gv6) is .true.")
 
     ! gv7 = nil
     rc = lua_getglobal(l, 'gv7')
     call test%assertequal(rc, LUA_TNIL, message="gv7 is type LUA_TNIL)")
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message="lua_isnil(gv7) is .true.")
 
     ! gv8 is not defined
     rc = lua_getglobal(l, 'gv8')
     call test%assertequal(rc, LUA_TNIL, message="Failure finding global name 'gv8' (type is LUA_TNIL)")
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message="lua_isnil(gv8) is .true.")
 
     ! is_fn = lua_isfunction(l, -1)
     ! call test%asserttrue(is_fn, message="Success from lua_isfunction - fib is a function")
