@@ -14,6 +14,133 @@ module lua
     implicit none
     private
 
+    ! Unmplemented C API Types
+    ! lua_Alloc
+    ! lua_CFunction
+    ! lua_Integer (alias to iso_fortran_env::INT64)
+    ! lua_KContext
+    ! lua_KFunction
+    ! lua_Number (alias to iso_fortran_env::REAL64)
+    ! lua_Reader
+    ! lua_State
+    ! lua_Unsigned
+    ! lua_Writer
+
+    ! Unmplemented C API Functions
+    ! lua_atpanic
+    ! lua_dump
+    ! lua_error
+    ! lua_getallocf
+    ! lua_getextraspace
+    ! lua_getfield
+    ! lua_geti
+    ! lua_getmetatable
+    ! lua_gettable
+    ! lua_getuservalue
+    ! lua_insert
+    ! lua_islightuserdata
+    ! lua_len
+    ! lua_newstate
+    ! lua_newthread
+    ! lua_newuserdata
+    ! lua_next
+    ! lua_numbertointeger
+    ! lua_pushccfunction
+    ! lua_pushfstring
+    ! lua_pushglobaltable
+    ! lua_pushliteral
+    ! lua_pushvfstring
+    ! lua_rawequal
+    ! lua_rawget
+    ! lua_rawgeti
+    ! lua_rawgetp
+    ! lua_rawlen
+    ! lua_rawset
+    ! lua_rawseti
+    ! lua_rawsetp
+    ! lua_replace
+    ! lua_resume
+    ! lua_rotate
+    ! lua_setallocf
+    ! lua_setfield
+    ! lua_seti
+    ! lua_setmetatable
+    ! lua_settable
+    ! lua_setuservalue
+    ! lua_stringtonumber
+    ! lua_toboolean
+    ! lua_tocfunction
+    ! lua_tolstring
+    ! lua_topointer
+    ! lua_tolstring
+    ! lua_touserdata
+    ! lua_upvalueindex
+    ! lua_version
+    ! lua_xmove
+    ! lua_yield
+    ! lua_yieldk
+
+    ! The Lua debug interface is not supported
+
+    ! Unimplemented Auxiliary Library functions
+    ! luaL_addchar
+    ! luaL_addlstring
+    ! luaL_addsize
+    ! luaL_addstring
+    ! luaL_addvalue
+    ! luaL_argcheck
+    ! luaL_argerror
+    ! luaL_Buffer
+    ! luaL_buffinit
+    ! luaL_buffinitsize
+    ! luaL_callmeta
+    ! luaL_checkany
+    ! luaL_checkinteger
+    ! luaL_checklstring
+    ! luaL_checknumber
+    ! luaL_checkoption
+    ! luaL_checkstack
+    ! luaL_checkstring
+    ! luaL_checktype
+    ! luaL_checkudata
+    ! luaL_checkversion
+    ! luaL_dostring
+    ! luaL_error
+    ! luaL_execresult
+    ! luaL_fileresult
+    ! luaL_getmetafield
+    ! luaL_getmetatable
+    ! luaL_getsubtable
+    ! luaL_gsub
+    ! luaL_loadbuffer
+    ! luaL_loadbufferx
+    ! luaL_newlib
+    ! luaL_newlibtable
+    ! luaL_newmetatable
+    ! luaL_opt
+    ! luaL_optinteger
+    ! luaL_optlstring
+    ! luaL_optnumber
+    ! luaL_optstring
+    ! luaL_prepbuffer
+    ! luaL_prepbuffsize
+    ! luaL_pushresult
+    ! luaL_pushresultsize
+    ! luaL_ref
+    ! luaL_Reg
+    ! luaL_requiref
+    ! luaL_setfuncs
+    ! luaL_setmetatable
+    ! luaL_Stream
+    ! luaL_testudata
+    ! luaL_tolstring
+    ! luaL_traceback
+    ! luaL_typename
+    ! luaL_unref
+    ! luaL_where
+
+    ! Implemented C API Functions
+    public :: lua_absindex
     public :: lua_arith
     public :: lua_call
     public :: lua_callk
@@ -65,6 +192,8 @@ module lua
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
+
+    ! Auxiliary Library functions
     public :: lual_dofile
     public :: lual_loadfile
     public :: lual_loadfilex
@@ -230,6 +359,22 @@ module lua
 
     !!!@{
     interface
+
+        !> @brief Converts the acceptable index idx into an equivalent
+        !! absolute index (that is, one that does not depend on the
+        !! stack top)
+        !!
+        !! C signature: `int lua_absindex(lua_State *L, int idx)`
+        function lua_absindex(l, idx) bind(c, name='lua_absindex')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            integer(kind=c_int)                    :: lua_absindex
+        end function lua_absindex
+
         !> @brief Ensures that the stack has space for at least *n* extra
         !! slots (that is, that you can safely push up to *n* values into
         !! it).
