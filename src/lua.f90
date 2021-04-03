@@ -36,9 +36,7 @@ module lua
     ! lua_error
     ! lua_getallocf
     ! lua_getextraspace
-    !* lua_geti
     ! lua_getmetatable
-    !* lua_gettable
     ! lua_getuservalue
     ! lua_insert
     ! lua_islightuserdata
@@ -477,6 +475,43 @@ module lua
             ! Return value
             integer(kind=c_int)                       :: lua_getglobal_
         end function lua_getglobal_
+
+        !> @brief Pushes onto the stack the value of the indexed table
+        !! element `t[i]`. Returns the type of that value.
+        !!
+        !! C signature: `int lua_geti (lua_State *L, int index, lua_Integer i)`
+        function lua_geti(l, idx, i) bind(c, name='lua_geti')
+            import :: c_int, c_ptr, c_int64_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),             intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value     :: idx
+            !> Index of value in table
+            integer(kind=c_int64_t), intent(in), value :: i
+            ! Return value
+            integer(kind=c_int)                        :: lua_geti
+        end function lua_geti
+
+        !> @brief Pushes onto the stack the value `t[k]`, where `t` is
+        !! the value at the given index (a table) and `k` is the value
+        !! at the top of the stack (key).
+        !!
+        !! Returns the type of the pushed value.
+        !!
+        !! This function pops the key from the stack, pushing the
+        !! resulting value in its place. As in Lua, this function may
+        !! trigger a metamethod for the "index" event.
+        !!
+        !! C signature: `int lua_gettable (lua_State *L, int index)`
+        function lua_gettable(l, idx) bind(c, name='lua_gettable')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value    :: idx
+            ! Return value
+            integer(kind=c_int)                       :: lua_gettable
+        end function lua_gettable
 
         !> @brief Pushes onto the stack the value `t[k]`, where `t` is the
         !! value (table) at the given index. Returns the type of the pushed
@@ -1673,7 +1708,7 @@ contains
     !!
     !! C signature: `const char *lua_tostring(lua_State *L, int index)`
     function lua_tostring(l, idx)
-        use, intrinsic :: iso_fortran_env, only: INT64
+        ! use, intrinsic :: iso_fortran_env, only: INT64
 
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in)       :: l
@@ -1684,7 +1719,7 @@ contains
         character(len=:), allocatable :: lua_tostring
 
         type(c_ptr)                   :: ptr
-        integer(kind=INT64)           :: size
+        integer(kind=LUA_INT)         :: size
         continue
 
         ptr = lua_tolstring(l, idx, c_null_ptr)
