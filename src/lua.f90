@@ -32,7 +32,7 @@ module lua
 
     ! Unmplemented C API Functions (* considered important)
     ! lua_atpanic
-    ! lua_dump
+    !* lua_dump
     ! lua_error
     ! lua_getallocf
     ! lua_getextraspace
@@ -40,7 +40,6 @@ module lua
     ! lua_getuservalue
     ! lua_insert
     ! lua_islightuserdata
-    !* lua_len
     ! lua_newstate
     ! lua_newthread
     ! lua_newuserdata
@@ -63,10 +62,7 @@ module lua
     ! lua_resume
     ! lua_rotate
     ! lua_setallocf
-    !* lua_setfield
-    !* lua_seti
     ! lua_setmetatable
-    !* lua_settable
     ! lua_setuservalue
     ! lua_stringtonumber
     ! lua_tocfunction
@@ -107,7 +103,6 @@ module lua
     ! luaL_checktype
     ! luaL_checkudata
     ! luaL_checkversion
-    !* luaL_dostring
     ! luaL_error
     ! luaL_execresult
     ! luaL_fileresult
@@ -136,7 +131,6 @@ module lua
     ! luaL_testudata
     ! luaL_tolstring
     ! luaL_traceback
-    !* luaL_typename
     ! luaL_unref
     ! luaL_where
 
@@ -170,6 +164,7 @@ module lua
     public :: lua_isthread
     public :: lua_isuserdata
     public :: lua_isyieldable
+    public :: lua_len
     public :: lua_load
     public :: lua_newtable
     public :: lua_pcall
@@ -186,7 +181,10 @@ module lua
     public :: lua_pushthread
     public :: lua_pushvalue
     public :: lua_register
+    public :: lua_setfield
     public :: lua_setglobal
+    public :: lua_seti
+    public :: lua_settable
     public :: lua_settop
     public :: lua_status
     public :: lua_toboolean
@@ -200,11 +198,13 @@ module lua
 
     ! Auxiliary Library functions
     public :: lual_dofile
+    public :: lual_dostring
     public :: lual_loadfile
     public :: lual_loadfilex
     public :: lual_loadstring
     public :: lual_newstate
     public :: lual_openlibs
+    public :: lual_typename
 
     !> @name Thread control options
 
@@ -478,6 +478,32 @@ module lua
             integer(kind=c_int)                       :: lua_getglobal_
         end function lua_getglobal_
 
+        !> @brief Pushes onto the stack the value `t[k]`, where `t` is the
+        !! value (table) at the given index. Returns the type of the pushed
+        !! value (`t[k]`).
+        !!
+        !! As in Lua, this function may trigger a metamethod for the
+        !! "index" event.
+        !!
+        !! This C API function is shadowed by the Fortran wrapper
+        !! function `lua_getfield()` which automatically terminates the
+        !! Fortran string (`name`) with `\0` for C compatibility. Do not
+        !! use this function in Fortran code unless you really know what
+        !! you are doing.
+        !!
+        !! C signature: `int lua_getfield(lua_State *L, int index, const char *name)`
+        function lua_getfield_(l, idx, name) bind(c, name='lua_getfield')
+            import :: c_char, c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table
+            integer(kind=c_int),    intent(in), value :: idx
+            !> Name of field to push onto the stack
+            character(kind=c_char), intent(in)        :: name
+            ! Return value
+            integer(kind=c_int)                       :: lua_getfield_
+        end function lua_getfield_
+
         !> @brief Pushes onto the stack the value of the indexed table
         !! element `t[i]`. Returns the type of that value.
         !!
@@ -514,32 +540,6 @@ module lua
             ! Return value
             integer(kind=c_int)                       :: lua_gettable
         end function lua_gettable
-
-        !> @brief Pushes onto the stack the value `t[k]`, where `t` is the
-        !! value (table) at the given index. Returns the type of the pushed
-        !! value (`t[k]`).
-        !!
-        !! As in Lua, this function may trigger a metamethod for the
-        !! "index" event.
-        !!
-        !! This C API function is shadowed by the Fortran wrapper
-        !! function `lua_getfield()` which automatically terminates the
-        !! Fortran string (`name`) with `\0` for C compatibility. Do not
-        !! use this function in Fortran code unless you really know what
-        !! you are doing.
-        !!
-        !! C signature: `int lua_getfield(lua_State *L, int index, const char *name)`
-        function lua_getfield_(l, idx, name) bind(c, name='lua_getfield')
-            import :: c_char, c_int, c_ptr
-            !> Pointer to Lua interpreter state
-            type(c_ptr),            intent(in), value :: l
-            !> Index of table
-            integer(kind=c_int),    intent(in), value :: idx
-            !> Name of field to push onto the stack
-            character(kind=c_char), intent(in)        :: name
-            ! Return value
-            integer(kind=c_int)                       :: lua_getfield_
-        end function lua_getfield_
 
         !> @brief Returns the index of the top element in the stack.
         !!
@@ -640,6 +640,21 @@ module lua
             integer(kind=c_int)            :: lua_isyieldable_
         end function lua_isyieldable_
 
+        !> @brief Returns the length of the value at the given index.
+        !!
+        !! It is equivalent to the '#' operator in Lua and may trigger a
+        !! metamethod for the "length" event. The result is pushed on
+        !! the stack.
+        !!
+        !! C signature: `void lua_len (lua_State *L, int index)`
+        subroutine lua_len(l, idx) bind(c, name='lua_len')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
+            integer(kind=c_int), intent(in), value :: idx
+        end subroutine lua_len
+
         !> @brief Loads a Lua chunk without running it.
         !!
         !! If there are no errors, `lua_load` pushes the compiled chunk
@@ -695,6 +710,65 @@ module lua
             ! Return value
             integer(kind=c_int)                       :: lua_load
         end function lua_load
+
+        !> @brief Does the equivalent to `t[k] = v`, where `t` is the
+        !! value (table) at the given index and `v` is the value at the
+        !! top of the stack.
+        !!
+        !! This function pops the value from the stack. As in Lua, this
+        !! function may trigger a metamethod for the "newindex" event
+        !!
+        !! This C API function is shadowed by the Fortran wrapper
+        !! function `lua_setfield()` which automatically terminates the
+        !! Fortran string (`name`) with `\0` for C compatibility. Do not
+        !! use this function in Fortran code unless you really know what
+        !! you are doing.
+        !!
+        !! C signature: `void lua_setfield (lua_State *L, int index, const char *k);`
+        subroutine lua_setfield_(l, idx, name) bind(c, name='lua_setfield')
+            import :: c_char, c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table
+            integer(kind=c_int),    intent(in), value :: idx
+            !> Name of field (key) to push onto the stack
+            character(kind=c_char), intent(in)        :: name
+        end subroutine lua_setfield_
+
+        !> @brief Does the equivalent to `t[n] = v`, where `t` is the
+        !! value at the given index and `v` is the value at the top of
+        !! the stack.
+        !!
+        !! This function pops the value from the stack. As in Lua, this
+        !! function may trigger a metamethod for the "newindex" event
+        !!
+        !! C signature: `void lua_seti (lua_State *L, int index, lua_Integer n)`
+        subroutine lua_seti(l, idx, n) bind(c, name='lua_seti')
+            import :: c_int, c_ptr, c_int64_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),             intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value     :: idx
+            !> Index of value in table
+            integer(kind=c_int64_t), intent(in), value :: n
+        end subroutine lua_seti
+
+        !> @brief Does the equivalent to t[k] = v, where t is the value
+        !! at the given index, v is the value at the top of the stack,
+        !! and k is the value just below the top.
+        !!
+        !! This function pops both the key and the value from the stack.
+        !! As in Lua, this function may trigger a metamethod for the
+        !! "newindex" event
+        !!
+        !! C signature: `void lua_settable (lua_State *L, int index)`
+        subroutine lua_settable(l, idx) bind(c, name='lua_settable')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value    :: idx
+        end subroutine lua_settable
 
         !> @brief Returns the status of the thread `L`.
         !!
@@ -1805,8 +1879,9 @@ contains
         return
     end function lua_typename
 
-    !> @brief Macro replacement that calls `lual_loadfile()`
-    !! and `lua_pcall()`.
+    !> @brief Loads and runs the given file.
+    !!
+    !! Macro replacement that calls `lual_loadfile()` and `lua_pcall()`.
     !!
     !! C signature: `int luaL_dofile(lua_State *L, const char *filename)`
     function lual_dofile(l, fn)
@@ -1826,6 +1901,28 @@ contains
 
         return
     end function lual_dofile
+
+    !> @brief Loads and runs the given file.
+    !!
+    !! Macro replacement that calls `lual_loadstring()` and `lua_pcall()`.
+    !!
+    !! C signature: `int luaL_dostring (lua_State *L, const char *str)`
+    function lual_dostring(l, s)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),      intent(in) :: l
+        !> String to load as a Lua chunk
+        character(len=*), intent(in) :: s
+        ! Return value
+        integer                      :: lual_dostring
+
+        continue
+
+        lual_dostring = luaL_loadstring(l, s)
+        if (lual_dostring == 0) then
+            lual_dostring = lua_pcall(l, 0, LUA_MULTRET, 0)
+        end if
+
+    end function lual_dostring
 
     !> @brief Macro replacement that calls `lual_loadfilex()`.
     !!
@@ -1861,6 +1958,37 @@ contains
 
         return
     end function lual_loadstring
+
+    !> @brief Returns the name of the type of the value at the given index.
+    !!
+    !! C signature: `const char *luaL_typename (lua_State *L, int index)`
+    function lual_typename(l, idx)
+        use, intrinsic :: iso_fortran_env, only: INT64
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in)       :: l
+        !> Stack index
+        integer,     intent(in)       :: idx
+
+        ! Lua value type code
+        integer                       :: tp
+
+        ! Return value
+        character(len=:), allocatable :: lual_typename
+
+        type(c_ptr)                   :: ptr
+        integer(kind=INT64)           :: size
+        continue
+
+        tp = lua_type(l, idx)
+        ptr = lua_typename_(l, tp)
+        if (.not. c_associated(ptr)) return
+
+        size = c_strlen(ptr)
+        allocate (character(len=size) :: lual_typename)
+        call c_f_string_ptr(ptr, lual_typename)
+
+        return
+    end function lual_typename
 
     !> @brief Calls a function. Fortran wrapper around `lua_callk`
     !!
@@ -1944,6 +2072,30 @@ contains
 
         return
     end subroutine lua_register
+
+    !> @brief Does the equivalent to `t[k] = v`, where `t` is the
+    !! value (table) at the given index and `v` is the value at the
+    !! top of the stack.
+    !!
+    !! This function pops the value from the stack. As in Lua, this
+    !! function may trigger a metamethod for the "newindex" event
+    !!
+    !! @note This is a wrapper around `lua_setfield_()`
+    !!
+    !! C signature: `void lua_setfield (lua_State *L, int index, const char *k);`
+    subroutine lua_setfield(l, idx, name)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),      intent(in) :: l
+        !> Index of table
+        integer,          intent(in) :: idx
+        !> Name of table key
+        character(len=*), intent(in) :: name
+        continue
+
+        call lua_setfield_(l, idx, name // c_null_char)
+
+        return
+    end subroutine lua_setfield
     !!!@}
 
     !> @name C/Fortran convenience functions

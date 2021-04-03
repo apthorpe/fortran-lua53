@@ -20,6 +20,7 @@ program ut_tablecheck
     integer :: nstack
     integer :: rc
     logical :: tf
+    integer(kind=INT64) :: tlength
 
     integer(kind=INT64) :: ival
     real(kind=WP) :: dval
@@ -55,6 +56,13 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv1 is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv1) is .true.")
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 0_INT64, message="lua_len(gv1) == 0_INT64")
+    ! Remove length
+    call lua_pop(l, 1)
+
+    ! Remove gv1
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
@@ -66,6 +74,12 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2a is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2a) is .true.")
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 5_INT64, message="lua_len(gv2a) == 5_INT64")
+    ! Remove length
+    call lua_pop(l, 1)
 
     ! gv2a[5] == 1
     rc = lua_geti(l, -1, 5_INT64)
@@ -142,6 +156,12 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2b is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2b) is .true.")
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 5_INT64, message="lua_len(gv2b) == 5_INT64")
+    ! Remove length
+    call lua_pop(l, 1)
 
     ! gv2b[5] == 1
     rc = lua_geti(l, -1, 5_INT64)
@@ -220,6 +240,12 @@ program ut_tablecheck
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2c) is .true.")
 
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 5_INT64, message="lua_len(gv2c) == 5_INT64")
+    ! Remove length
+    call lua_pop(l, 1)
+
     ! gv2c[5] == 1
     rc = lua_geti(l, -1, 5_INT64)
     call test%assertequal(rc, LUA_TNUMBER, message="gv2c[5] is type LUA_TNUMBER")
@@ -295,6 +321,12 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2d is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2d) is .true.")
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 5_INT64, message="lua_len(gv2d) == 5_INT64")
+    ! Remove length
+    call lua_pop(l, 1)
 
     ! gv2d[5] == 1
     rc = lua_geti(l, -1, 5_INT64)
@@ -372,6 +404,12 @@ program ut_tablecheck
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv3a) is .true.")
 
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 0_INT64, message="lua_len(gv3a) == 0_INT64 (Lua-ism: lua_len() only counts indices 1..n)")
+    ! Remove length
+    call lua_pop(l, 1)
+
     ! gv3a["a"] == 5
     rc = lua_getfield(l, -1, "a")
     call test%assertequal(rc, LUA_TNUMBER, message='gv3a["a"] is type LUA_TNUMBER')
@@ -447,6 +485,12 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv3b is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv3b) is .true.")
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 0_INT64, message="lua_len(gv3b) == 0_INT64 (Lua-ism: lua_len() only counts indices 1..n)")
+    ! Remove length
+    call lua_pop(l, 1)
 
     ! gv3b["a"] == 5
     rc = lua_getfield(l, -1, "a")
@@ -536,6 +580,12 @@ program ut_tablecheck
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv4a) is .true.")
 
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 6_INT64, message="lua_len(gv4a) == 6_INT64")
+    ! Remove length
+    call lua_pop(l, 1)
+
     ! gv4a[4] == "Backordered"
     rc = lua_geti(l, -1, 4_INT64)
     call test%assertequal(rc, LUA_TSTRING, message="gv4a[4] is type LUA_TSTRING")
@@ -585,6 +635,13 @@ program ut_tablecheck
     ! gv4a[5] == { bearings = 2, seals = 8, impeller = 1 }
     rc = lua_geti(l, -1, 5_INT64)
     call test%assertequal(rc, LUA_TTABLE, message="gv4a[5] is type LUA_TTABLE")
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 0_INT64, message="lua_len(gv4a[5]) == 0_INT64 (Lua-ism: lua_len() only counts indices 1..n)")
+    ! Remove length
+    call lua_pop(l, 1)
+
     rc = lua_getfield(l, -1, "bearings")
     call test%assertequal(rc, LUA_TNUMBER, message='gv4a[5]["bearings"] is type LUA_TNUMBER')
     tf = lua_isstring(l, -1)
