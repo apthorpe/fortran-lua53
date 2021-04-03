@@ -17,34 +17,34 @@ module lua
     ! Unmplemented C API Types
     ! lua_Alloc
     ! lua_CFunction
-    ! lua_Integer (alias to iso_fortran_env::INT64)
+    !* lua_Integer (alias to iso_fortran_env::INT64)
     ! lua_KContext
     ! lua_KFunction
-    ! lua_Number (alias to iso_fortran_env::REAL64)
+    !* lua_Number (alias to iso_fortran_env::REAL64)
     ! lua_Reader
     ! lua_State
     ! lua_Unsigned
     ! lua_Writer
 
-    ! Unmplemented C API Functions
+    ! Unmplemented C API Functions (* considered important)
     ! lua_atpanic
-    ! lua_dump
+    !* lua_dump
     ! lua_error
     ! lua_getallocf
     ! lua_getextraspace
-    ! lua_getfield
+    !* lua_getfield
     ! lua_geti
     ! lua_getmetatable
-    ! lua_gettable
+    !* lua_gettable
     ! lua_getuservalue
     ! lua_insert
     ! lua_islightuserdata
-    ! lua_len
+    !* lua_len
     ! lua_newstate
     ! lua_newthread
     ! lua_newuserdata
-    ! lua_next
-    ! lua_numbertointeger
+    !* lua_next
+    !* lua_numbertointeger
     ! lua_pushccfunction
     ! lua_pushfstring
     ! lua_pushglobaltable
@@ -62,27 +62,31 @@ module lua
     ! lua_resume
     ! lua_rotate
     ! lua_setallocf
-    ! lua_setfield
+    !* lua_setfield
     ! lua_seti
     ! lua_setmetatable
-    ! lua_settable
+    !* lua_settable
     ! lua_setuservalue
     ! lua_stringtonumber
-    ! lua_toboolean
+    !* lua_toboolean
     ! lua_tocfunction
     ! lua_tolstring
     ! lua_topointer
-    ! lua_tolstring
     ! lua_touserdata
     ! lua_upvalueindex
-    ! lua_version
+    !* lua_version
     ! lua_xmove
     ! lua_yield
     ! lua_yieldk
 
     ! The Lua debug interface is not supported
 
-    ! Unimplemented Auxiliary Library functions
+    ! Unimplemented Auxiliary Library types
+    ! luaL_Buffer
+    ! luaL_Reg
+    ! luaL_Stream
+
+    ! Unimplemented Auxiliary Library functions (* considered important)
     ! luaL_addchar
     ! luaL_addlstring
     ! luaL_addsize
@@ -90,7 +94,6 @@ module lua
     ! luaL_addvalue
     ! luaL_argcheck
     ! luaL_argerror
-    ! luaL_Buffer
     ! luaL_buffinit
     ! luaL_buffinitsize
     ! luaL_callmeta
@@ -104,7 +107,7 @@ module lua
     ! luaL_checktype
     ! luaL_checkudata
     ! luaL_checkversion
-    ! luaL_dostring
+    !* luaL_dostring
     ! luaL_error
     ! luaL_execresult
     ! luaL_fileresult
@@ -127,15 +130,13 @@ module lua
     ! luaL_pushresult
     ! luaL_pushresultsize
     ! luaL_ref
-    ! luaL_Reg
     ! luaL_requiref
     ! luaL_setfuncs
     ! luaL_setmetatable
-    ! luaL_Stream
     ! luaL_testudata
     ! luaL_tolstring
     ! luaL_traceback
-    ! luaL_typename
+    !* luaL_typename
     ! luaL_unref
     ! luaL_where
 
