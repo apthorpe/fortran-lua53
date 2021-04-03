@@ -156,7 +156,7 @@ program ut_typecheck
     dval = lua_tonumber(l, -1)
     call test%assertequal(dval, -0.5_WP, message="lua_tonumber(gv9) == -0.5_REAL64")
     ival = lua_tointeger(l, -1)
-    call test%assertequal(ival, 0_INT64, message="lua_tointeger(gv9) == 0_INT64 (tuncated)")
+    call test%assertequal(ival, 0_INT64, message="lua_tointeger(gv9) == 0_INT64 (truncated)")
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
