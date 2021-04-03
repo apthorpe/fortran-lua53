@@ -22,7 +22,8 @@ program ut_tablecheck
     logical :: tf
 
     integer(kind=INT64) :: ival
-    ! real(kind=WP) :: dval
+    real(kind=WP) :: dval
+    character(len=:), allocatable :: cval
 
     type(TestCase) :: test
 
@@ -491,8 +492,8 @@ program ut_tablecheck
     call test%assertequal(ival, 1_INT64, message='lua_tointeger(gv3b["e"]) == 1_INT64')
     call lua_pop(l, 1)
 
-    ! gv3b["underpants gnomes"] == 1
-    rc = lua_getfield(l, -1, "underpants gnomes")
+    ! gv3b['"'] == 1
+    rc = lua_getfield(l, -1, '"')
     call test%assertequal(rc, LUA_TNIL, message='gv3b["underpants gnomes"] is type LUA_TNIL')
     tf = lua_isnil(l, -1)
     call test%asserttrue(tf, message='lua_isinteger(gv3b["underpants gnomes"]) is .true.')
@@ -526,6 +527,50 @@ program ut_tablecheck
 
     ! nstack = lua_gettop(l)
     ! call test%assertequal(nstack, 0, message="Expect empty stack after gv3c test")
+
+    ! -- gv4a is a mixed array
+    ! gv4a = { "Hydraulic pump", 124.95, -2, "Backordered" }
+
+    rc = lua_getglobal(l, 'gv4a')
+    call test%assertequal(rc, LUA_TTABLE, message="gv4a is type LUA_TTABLE")
+    tf = lua_istable(l, -1)
+    call test%asserttrue(tf, message="lua_istable(gv4a) is .true.")
+
+    ! gv4a[4] == "Backordered"
+    rc = lua_geti(l, -1, 4_INT64)
+    call test%assertequal(rc, LUA_TSTRING, message="gv4a[4] is type LUA_TSTRING")
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message="lua_isnumber(gv4a[4]) is .false.")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv4a[4]) is .true.")
+    cval = lua_tostring(l, -1)
+    call test%assertequal("Backordered", cval, message='lua_string(gv4a[4]) == "Backordered"')
+    call lua_pop(l, 1)
+
+    ! gv2d[1] == "Hydraulic pump"
+    rc = lua_geti(l, -1, 1_INT64)
+    call test%assertequal(rc, LUA_TSTRING, message="gv4a[1] is type LUA_TSTRING")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv4a[1]) is .true.")
+    cval = lua_tostring(l, -1)
+    call test%assertequal("Hydraulic pump", cval, message='lua_tostring(gv4a[1]) == "Hydraulic pump"')
+    call lua_pop(l, 1)
+
+    ! gv4a[2] == 124.95
+    rc = lua_geti(l, -1, 2_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv4a[2] is type LUA_TNUMBER")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv4a[2]) is .true. (Lua-ism: numbers can be converted to strings)")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv4a[2]) is .true.")
+    dval = lua_tonumber(l, -1)
+    call test%assertequal(124.95_WP, dval, message='lua_tonumber(gv4a[2]) == 124.95')
+    call lua_pop(l, 1)
+
+    call lua_pop(l, 1)
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 0, message="Expect empty stack after gv4a test")
 
     ! Close the interpreter
 

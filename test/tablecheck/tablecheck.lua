@@ -29,4 +29,7 @@ gv3b = { a = 5, b = 4, c = 3, d = 2, e = 1 }
 -- -- gv3c is a dict identical to gv3a
 -- gv3c = { ["a"] = 5, b = 4; "c" = 3, d = 2; ["e"] = 1; }
 
+-- gv4a is a mixed array
+gv4a = { "Hydraulic pump", 124.95, -2, "Backordered" }
+
 
