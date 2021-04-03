@@ -1,20 +1,24 @@
 !> @file lua.f90
 !!
-!! @brief A collection of ISO C binding interfaces to Lua 5.3 for Fortran 2003.
+!! @brief A collection of ISO C binding interfaces to Lua 5.3 for
+!! Fortran 2003.
 !!
 !! @author Philipp Engel
 !! @copyright ISC; see LICENCE
 
 
-!> @brief A collection of ISO C binding interfaces to Lua 5.3 for Fortran 2003.
+!> @brief A collection of ISO C binding interfaces to Lua 5.3 for
+!! Fortran 2003.
 !!
 !! See @cite Lua53Manual for details.
 module lua
+    use, intrinsic :: iso_fortran_env, only: LUA_INT => INT64,          &
+        LUA_FLOAT => REAL64
     use, intrinsic :: iso_c_binding
     implicit none
     private
 
-    ! Unmplemented C API Types
+    ! Unmplemented C API Types (* considered important)
     ! lua_Alloc
     ! lua_CFunction
     !* lua_Integer (alias to iso_fortran_env::INT64)
