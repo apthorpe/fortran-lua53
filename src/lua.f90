@@ -155,6 +155,8 @@ module lua
     public :: lua_gc
     public :: lua_getfield
     public :: lua_getglobal
+    public :: lua_geti
+    public :: lua_gettable
     public :: lua_gettop
     public :: lua_isboolean
     public :: lua_iscfunction
