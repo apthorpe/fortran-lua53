@@ -22,7 +22,7 @@ program ut_tablecheck
     logical :: tf
 
     integer(kind=INT64) :: ival
-    real(kind=WP) :: dval
+    ! real(kind=WP) :: dval
 
     type(TestCase) :: test
 
@@ -65,6 +65,71 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2a is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2a) is .true.")
+
+    ! gv2a[5] == 1
+    rc = lua_geti(l, -1, 5_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2a[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2a[5]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2a[5]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 1_INT64, message="lua_tointeger(gv2a[5]) == 1_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2a[4] == 2
+    rc = lua_geti(l, -1, 4_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2a[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2a[4]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2a[4]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 2_INT64, message="lua_tointeger(gv2a[4]) == 2_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2a[3] == 3
+    rc = lua_geti(l, -1, 3_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2a[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2a[3]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2a[3]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 3_INT64, message="lua_tointeger(gv2a[3]) == 3_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2a[2] == 4
+    rc = lua_geti(l, -1, 2_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2a[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2a[2]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2a[2]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 4_INT64, message="lua_tointeger(gv2a[2]) == 4_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2a[1] == 5
+    rc = lua_geti(l, -1, 1_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2a[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2a[1]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2a[1]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 5_INT64, message="lua_tointeger(gv2a[1]) == 5_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2a[6] == nil
+    rc = lua_geti(l, -1, 6_INT64)
+    call test%assertequal(rc, LUA_TNIL, message="gv2a[6] is type LUA_TNIL")
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message="lua_isnil(gv2a[6]) is .true.")
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message="lua_isnumber(gv2a[6]) is .false.")
+    call lua_pop(l, 1)
+
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
@@ -76,6 +141,72 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2b is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2b) is .true.")
+
+    ! gv2b[5] == 1
+    rc = lua_geti(l, -1, 5_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2b[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2b[5]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2b[5]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 1_INT64, message="lua_tointeger(gv2b[5]) == 1_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2b[4] == 2
+    rc = lua_geti(l, -1, 4_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2b[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2b[4]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2b[4]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 2_INT64, message="lua_tointeger(gv2b[4]) == 2_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2b[3] == 3
+    rc = lua_geti(l, -1, 3_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2b[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2b[3]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2b[3]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 3_INT64, message="lua_tointeger(gv2b[3]) == 3_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2b[2] == 4
+    rc = lua_geti(l, -1, 2_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2b[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2b[2]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2b[2]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 4_INT64, message="lua_tointeger(gv2b[2]) == 4_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2b[1] == 5
+    rc = lua_geti(l, -1, 1_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2b[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2b[1]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2b[1]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 5_INT64, message="lua_tointeger(gv2b[1]) == 5_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2b[6] == nil
+    rc = lua_geti(l, -1, 6_INT64)
+    call test%assertequal(rc, LUA_TNIL, message="gv2b[6] is type LUA_TNIL")
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message="lua_isnil(gv2b[6]) is .true.")
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message="lua_isnumber(gv2b[6]) is .false.")
+    call lua_pop(l, 1)
+
+    ! Remove table gv2b from stack
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
@@ -87,6 +218,71 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2c is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2c) is .true.")
+
+    ! gv2c[5] == 1
+    rc = lua_geti(l, -1, 5_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2c[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2c[5]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2c[5]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 1_INT64, message="lua_tointeger(gv2c[5]) == 1_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2c[4] == 2
+    rc = lua_geti(l, -1, 4_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2c[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2c[4]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2c[4]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 2_INT64, message="lua_tointeger(gv2c[4]) == 2_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2c[3] == 3
+    rc = lua_geti(l, -1, 3_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2c[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2c[3]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2c[3]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 3_INT64, message="lua_tointeger(gv2c[3]) == 3_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2c[2] == 4
+    rc = lua_geti(l, -1, 2_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2c[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2c[2]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2c[2]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 4_INT64, message="lua_tointeger(gv2c[2]) == 4_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2c[1] == 5
+    rc = lua_geti(l, -1, 1_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2c[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2c[1]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2c[1]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 5_INT64, message="lua_tointeger(gv2c[1]) == 5_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2c[6] == nil
+    rc = lua_geti(l, -1, 6_INT64)
+    call test%assertequal(rc, LUA_TNIL, message="gv2c[6] is type LUA_TNIL")
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message="lua_isnil(gv2c[6]) is .true.")
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message="lua_isnumber(gv2c[6]) is .false.")
+    call lua_pop(l, 1)
+
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
@@ -98,6 +294,71 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv2d is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv2d) is .true.")
+
+    ! gv2d[5] == 1
+    rc = lua_geti(l, -1, 5_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2d[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2d[5]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2d[5]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 1_INT64, message="lua_tointeger(gv2d[5]) == 1_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2d[4] == 2
+    rc = lua_geti(l, -1, 4_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2d[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2d[4]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2d[4]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 2_INT64, message="lua_tointeger(gv2d[4]) == 2_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2d[3] == 3
+    rc = lua_geti(l, -1, 3_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2d[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2d[3]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2d[3]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 3_INT64, message="lua_tointeger(gv2d[3]) == 3_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2d[2] == 4
+    rc = lua_geti(l, -1, 2_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2d[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2d[2]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2d[2]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 4_INT64, message="lua_tointeger(gv2d[2]) == 4_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2d[1] == 5
+    rc = lua_geti(l, -1, 1_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv2d[5] is type LUA_TNUMBER")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv2d[1]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message="lua_isinteger(gv2d[1]) is .true.")
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 5_INT64, message="lua_tointeger(gv2d[1]) == 5_INT64")
+    call lua_pop(l, 1)
+
+    ! gv2d[6] == nil
+    rc = lua_geti(l, -1, 6_INT64)
+    call test%assertequal(rc, LUA_TNIL, message="gv2d[6] is type LUA_TNIL")
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message="lua_isnil(gv2d[6]) is .true.")
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message="lua_isnumber(gv2d[6]) is .false.")
+    call lua_pop(l, 1)
+
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
@@ -109,6 +370,71 @@ program ut_tablecheck
     call test%assertequal(rc, LUA_TTABLE, message="gv3a is type LUA_TTABLE")
     tf = lua_istable(l, -1)
     call test%asserttrue(tf, message="lua_istable(gv3a) is .true.")
+
+    ! gv3a["a"] == 5
+    rc = lua_getfield(l, -1, "a")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv3a["a"] is type LUA_TNUMBER')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv3a["a"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv3a["a"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 5_INT64, message='lua_tointeger(gv3a["a"]) == 5_INT64')
+    call lua_pop(l, 1)
+
+    ! gv3a["d"] == 2
+    rc = lua_getfield(l, -1, "d")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv3a["d"] is type LUA_TNUMBER')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv3a["d"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv3a["d"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 2_INT64, message='lua_tointeger(gv3a["d"]) == 2_INT64')
+    call lua_pop(l, 1)
+
+    ! gv3a["b"] == 4
+    rc = lua_getfield(l, -1, "b")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv3a["b"] is type LUA_TNUMBER')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv3a["b"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv3a["b"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 4_INT64, message='lua_tointeger(gv3a["b"]) == 4_INT64')
+    call lua_pop(l, 1)
+
+    ! gv3a["e"] == 1
+    rc = lua_getfield(l, -1, "e")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv3a["e"] is type LUA_TNUMBER')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv3a["e"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv3a["e"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 1_INT64, message='lua_tointeger(gv3a["e"]) == 1_INT64')
+    call lua_pop(l, 1)
+
+    ! gv3a["underpants gnomes"] == 1
+    rc = lua_getfield(l, -1, "underpants gnomes")
+    call test%assertequal(rc, LUA_TNIL, message='gv3a["underpants gnomes"] is type LUA_TNIL')
+    tf = lua_isnil(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv3a["underpants gnomes"]) is .true.')
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message='lua_isnumber(gv3a["underpants gnomes"]) is .false.')
+    call lua_pop(l, 1)
+
+    ! gv3a["c"] == 3
+    rc = lua_getfield(l, -1, "c")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv3a["c"] is type LUA_TNUMBER')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv3a["c"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv3a["c"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(ival, 3_INT64, message='lua_tointeger(gv3a["c"]) == 3_INT64')
+    call lua_pop(l, 1)
+
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
