@@ -21,10 +21,10 @@ gv2c = { 5, 4; 3; 2, 1; }
 gv2d = { 5; 4; 3, 2, 1, }
 
 -- gv3a is a dict
-gv3a = { ["a"] = 5, ["b"] = 4, ["b"] = 3, ["d"] = 2, ["e"] = 1 }
+gv3a = { ["a"] = 5, ["b"] = 4, ["c"] = 3, ["d"] = 2, ["e"] = 1 }
 
 -- gv3b is a dict identical to gv3a
-gv3b = { a = 5, b = 4, b = 3, d = 2, e = 1 }
+gv3b = { a = 5, b = 4, c = 3, d = 2, e = 1 }
 
 -- -- gv3c is a dict identical to gv3a
 -- gv3c = { ["a"] = 5, b = 4; "c" = 3, d = 2; ["e"] = 1; }
