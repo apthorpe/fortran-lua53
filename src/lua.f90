@@ -69,7 +69,6 @@ module lua
     !* lua_settable
     ! lua_setuservalue
     ! lua_stringtonumber
-    !* lua_toboolean
     ! lua_tocfunction
     ! lua_tolstring
     ! lua_topointer
@@ -190,6 +189,7 @@ module lua
     public :: lua_setglobal
     public :: lua_settop
     public :: lua_status
+    public :: lua_toboolean
     public :: lua_tointeger
     public :: lua_tointegerx
     public :: lua_tonumber
@@ -714,6 +714,28 @@ module lua
             ! Return value
             integer(kind=c_int)            :: lua_status
         end function lua_status
+
+        !> @brief Converts the Lua value at the given index to
+        !! a C boolean value (0 or 1; zero is false, non-zero is true).
+        !!
+        !! Like all tests in Lua, `lua_toboolean_` returns `true` for any
+        !! Lua value different from `false` and `nil`; otherwise it
+        !! returns false. (If you want to accept only actual boolean
+        !! values, use `lua_isboolean` to test the value's type.)
+        !!
+        !! @note This C function wrapper returns a Fortran integer, not
+        !! a logical value. Use `lua_toboolean` instead.
+        !!
+        !! C signature: `int lua_toboolean (lua_State *L, int index)`
+        function lua_toboolean_(l, idx) bind(c, name='lua_toboolean')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of entry to convert
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            integer(kind=c_int)                    :: lua_toboolean_
+        end function lua_toboolean_
 
         !> @brief Converts the Lua value at the given index to the
         !! signed integral type `lua_Integer`.
@@ -1655,6 +1677,27 @@ contains
 
         return
     end function lua_pcall
+
+    !> @brief Converts the Lua value at the given index to a Fortran logical
+    !! value. Zero is `false` in C, non-zero is `true`
+    !!
+    !! C signature: `int lua_toboolean (lua_State *L, int index)`
+    !!
+    !! @note Fortran wrapper around `lua_toboolean_()` in Lua C API
+    function lua_toboolean(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to convert
+        integer,     intent(in) :: idx
+
+        ! Return value
+        logical                 :: lua_toboolean
+        continue
+
+        lua_toboolean = (lua_toboolean_(l, idx) /= 0)
+
+        return
+    end function lua_toboolean
 
     !> @brief Converts the Lua value at the given index to the signed
     !! integral type `lua_Integer`.
