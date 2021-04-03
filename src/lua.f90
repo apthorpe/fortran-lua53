@@ -32,12 +32,11 @@ module lua
 
     ! Unmplemented C API Functions (* considered important)
     ! lua_atpanic
-    !* lua_dump
+    ! lua_dump
     ! lua_error
     ! lua_getallocf
     ! lua_getextraspace
-    !* lua_getfield
-    ! lua_geti
+    !* lua_geti
     ! lua_getmetatable
     !* lua_gettable
     ! lua_getuservalue
@@ -67,7 +66,7 @@ module lua
     ! lua_rotate
     ! lua_setallocf
     !* lua_setfield
-    ! lua_seti
+    !* lua_seti
     ! lua_setmetatable
     !* lua_settable
     ! lua_setuservalue
@@ -156,6 +155,7 @@ module lua
     public :: lua_copy
     public :: lua_createtable
     public :: lua_gc
+    public :: lua_getfield
     public :: lua_getglobal
     public :: lua_gettop
     public :: lua_isboolean
@@ -477,6 +477,32 @@ module lua
             ! Return value
             integer(kind=c_int)                       :: lua_getglobal_
         end function lua_getglobal_
+
+        !> @brief Pushes onto the stack the value `t[k]`, where `t` is the
+        !! value (table) at the given index. Returns the type of the pushed
+        !! value (`t[k]`).
+        !!
+        !! As in Lua, this function may trigger a metamethod for the
+        !! "index" event.
+        !!
+        !! This C API function is shadowed by the Fortran wrapper
+        !! function `lua_getfield()` which automatically terminates the
+        !! Fortran string (`name`) with `\0` for C compatibility. Do not
+        !! use this function in Fortran code unless you really know what
+        !! you are doing.
+        !!
+        !! C signature: `int lua_getfield(lua_State *L, int index, const char *name)`
+        function lua_getfield_(l, idx, name) bind(c, name='lua_getfield')
+            import :: c_char, c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table
+            integer(kind=c_int),    intent(in), value :: idx
+            !> Name of field to push onto the stack
+            character(kind=c_char), intent(in)        :: name
+            ! Return value
+            integer(kind=c_int)                       :: lua_getfield_
+        end function lua_getfield_
 
         !> @brief Returns the index of the top element in the stack.
         !!
@@ -1104,8 +1130,10 @@ module lua
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Hint of number of elements in the table as a sequence
+            !! (with implied numeric index; array-like)
             integer(kind=c_int), intent(in), value :: narr
             !> Hint of number of other elements in the table
+            !! (with explicit key; dict-like)
             integer(kind=c_int), intent(in), value :: nrec
         end subroutine lua_createtable
 
@@ -1278,6 +1306,33 @@ contains
 
         return
     end function lua_getglobal
+
+    !!!@{
+    !> @brief Pushes onto the stack the value `t[k]`, where `t` is the
+    !! value (table) at the given index. Returns the type of the pushed
+    !! value (`t[k]`).
+    !!
+    !! As in Lua, this function may trigger a metamethod for the
+    !! "index" event.
+    !!
+    !! Wrapper for `lua_getfield_()` that null-terminates string `name`.
+    !!
+    !! C signature: `int lua_getfield(lua_State *L, int index, const char *name)`
+    function lua_getfield(l, idx, name)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),      intent(in) :: l
+        !> Index of table
+        integer,          intent(in) :: idx
+        !> Name of table key
+        character(len=*), intent(in) :: name
+        ! Return value
+        integer                      :: lua_getfield
+        continue
+
+        lua_getfield = lua_getfield_(l, idx, name // c_null_char)
+
+        return
+    end function lua_getfield
 
     !> @brief Macro replacement that returns whether the stack variable
     !! is boolean.
