@@ -16,6 +16,7 @@ program ut_typecheck
     type(c_ptr) :: l
 
     character(len=32) :: fname
+    character(len=:), allocatable :: tname
 
     integer :: nstack
     integer :: rc
@@ -83,6 +84,10 @@ program ut_typecheck
     call test%assertequal(rc, LUA_TSTRING, message="gv3 is type LUA_TSTRING")
     tf = lua_isstring(l, -1)
     call test%asserttrue(tf, message="lua_isstring(gv3) is .true.")
+    tname = lual_typename(l, -1)
+    call test%assertequal(tname, "string", message='gv3 typename is "string"')
+    ! write(unit=stdout, fmt='(A)') "gv3 is of type " // lual_typename(l, -1)
+    ! "gv3 is of type string"
     call lua_pop(l, 1)
 
     nstack = lua_gettop(l)
