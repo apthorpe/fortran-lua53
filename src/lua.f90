@@ -31,33 +31,29 @@ module lua
     !* lua_Writer - needed for lua_dump
 
     ! Unmplemented C API Functions (* considered important)
-    !X lua_atpanic - demonstrate need
+    !X lua_atpanic - demonstrate need - low-level process signalling beyond scope
     !* lua_dump
-    !X lua_getallocf - demonstrate need
-    !X lua_getextraspace - demonstrate need
-    !x lua_getuservalue - demonstrate need
+    !X lua_getallocf - demonstrate need - low-level memory management beyond scope
+    !X lua_getextraspace - demonstrate need - low-level memory management beyond scope
+    !x lua_getuservalue - demonstrate need - uservalue/userdata beyond scope
     !o lua_newstate - use lual_newstate
-    !X lua_newthread - demonstrate need
-    !X lua_newuserdata - demonstrate need
+    !X lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
+    !X lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
     !o lua_numbertointeger - equivalent to Fortran's int() intrinsic
-    !x lua_pushcfunction - demonstrate need
     !o lua_pushfstring - compose string with format() then use lua_pushstring
     !o lua_pushliteral - use lua_pushstring
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
-    !X lua_rawgetp - demonstrate need
-    !X lua_rawsetp - demonstrate need
-    !X lua_resume - demonstrate need
-    !X lua_setallocf - demonstrate need
-    !X lua_setuservalue - demonstrate need
-    !* lua_stringtonumber
-    !X lua_tocfunction - demonstrate need
-    !* lua_tolstring
-    !X lua_topointer - demonstrate need
-    !X lua_touserdata - demonstrate need
-    !X lua_upvalueindex - demonstrate need
-    !X lua_xmove - demonstrate need
-    !X lua_yield - demonstrate need
-    !X lua_yieldk - demonstrate need
+    !X lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
+    !X lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
+    !X lua_resume - demonstrate need - coroutines and thread mgmt beyond scope
+    !X lua_setallocf - demonstrate need - low-level memory management beyond scope
+    !X lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
+    !X lua_tocfunction - demonstrate need - partial support of C functions
+    !X lua_topointer - demonstrate need - used mainly for hashing and debugging
+    !X lua_touserdata - demonstrate need - uservalue/userdata beyond scope
+    !X lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
+    !X lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
+    !X lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
 
     ! The Lua debug interface is not supported
 
@@ -185,6 +181,7 @@ module lua
     public :: lua_settable
     public :: lua_settop
     public :: lua_status
+    public :: lua_stringtonumber
     public :: lua_toboolean
     public :: lua_tointeger
     public :: lua_tointegerx
@@ -193,6 +190,7 @@ module lua
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
+    public :: lua_upvalueindex
     public :: lua_version
 
     ! Auxiliary Library functions
@@ -903,6 +901,32 @@ module lua
             integer(kind=c_int)            :: lua_status
         end function lua_status
 
+        !> @brief Converts the zero-terminated string s to a number,
+        !! pushes that number into the stack, and returns the total size
+        !! of the string, that is, its length plus one.
+        !!
+        !! The conversion can result in an integer or a float, according
+        !! to the lexical conventions of Lua. The string may have
+        !! leading and trailing spaces and a sign. If the string is not
+        !! a valid numeral, returns 0 and pushes nothing. (Note that the
+        !! result can be used as a boolean, `true` if the conversion
+        !! succeeds.)
+        !!
+        !! @note This C function wrapper returns a null-terminated
+        !! C string, not a Fortran-style string. Use `lua_stringtonumber`
+        !! instead.
+        !!
+        !! C signature: `int luaL_loadstring (lua_State *L, const char *s)`
+        function lua_stringtonumber_(l, s) bind(c, name='lua_stringtonumber')
+            import :: c_char, c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> String containing a Lua chunk
+            character(kind=c_char), intent(in)        :: s
+            ! Return value
+            integer(kind=c_int)                       :: lua_stringtonumber_
+        end function lua_stringtonumber_
+
         !> @brief Converts the Lua value at the given index to
         !! a C boolean value (0 or 1; zero is false, non-zero is true).
         !!
@@ -1039,6 +1063,21 @@ module lua
             ! Return value
             type(c_ptr)                            :: lua_typename_
         end function lua_typename_
+
+        !> @brief Returns the pseudo-index that represents the `i`-th
+        !! upvalue of the running function.
+        !!
+        !! `i` can range from 1 to 256. Upvalues refer to variables
+        !! associated with C closures.
+        !!
+        !! C signature: `int lua_upvalueindex (int i)`
+        function lua_upvalueindex(i) bind(c, name='lua_upvalueindex')
+            import :: c_int
+            !> Upvalue index
+            integer(kind=c_int), intent(in), value :: i
+            ! Return value
+            integer(kind=c_int)                    :: lua_upvalueindex
+        end function lua_upvalueindex
 
         ! Auxilliary library functions
 
@@ -2041,6 +2080,37 @@ contains
         return
     end function lua_pcall
 
+    !> @brief Converts the Fortran string `s` to a number, pushes that
+    !! number into the stack, and returns the total size of the string,
+    !! that is, its length plus one.
+    !!
+    !! The conversion can result in an integer or a float, according to
+    !! the lexical conventions of Lua. The string may have leading and
+    !! trailing spaces and a sign. If the string is not a valid numeral,
+    !! returns 0 and pushes nothing. (Note that the result can be used
+    !! as a boolean, true if the conversion succeeds.)
+    !!
+    !! @note This wraps the original C function, available at
+    !!  `lua_stringtonumber_`. That function takes a null-terminated C
+    !!  string instead of a Fortran string.
+    !!
+    !! C signature: `size_t lua_stringtonumber (lua_State *L, const char *s)`
+    function lua_stringtonumber(l, s)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),      intent(in) :: l
+        !> String to convert to a number and push to stack
+        character(len=*), intent(in) :: s
+
+        ! Return value
+        integer(kind=c_size_t)       :: lua_stringtonumber
+
+        continue
+
+        lua_stringtonumber = lua_stringtonumber_(l, s // c_null_char)
+
+        return
+    end function lua_stringtonumber
+
     !> @brief Converts the Lua value at the given index to a Fortran logical
     !! value. Zero is `false` in C, non-zero is `true`
     !!
@@ -2236,6 +2306,7 @@ contains
             lual_dostring = lua_pcall(l, 0, LUA_MULTRET, 0)
         end if
 
+        return
     end function lual_dostring
 
     !> @brief Macro replacement that calls `lual_loadfilex()`.
