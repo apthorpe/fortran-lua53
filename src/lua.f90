@@ -31,19 +31,15 @@ module lua
     ! lua_Writer
 
     ! Unmplemented C API Functions (* considered important)
-    ! lua_atpanic
+    !X lua_atpanic
     !* lua_dump
     ! lua_error
-    ! lua_getallocf
-    ! lua_getextraspace
-    ! lua_getmetatable
-    ! lua_getuservalue
-    ! lua_insert
-    ! lua_islightuserdata
-    ! lua_newstate
-    ! lua_newthread
-    ! lua_newuserdata
-    !* lua_next
+    !X lua_getallocf
+    !X lua_getextraspace
+    !x lua_getuservalue
+    !X lua_newstate
+    !X lua_newthread
+    !X lua_newuserdata
     !* lua_numbertointeger
     ! lua_pushccfunction
     ! lua_pushfstring
@@ -149,8 +145,10 @@ module lua
     public :: lua_getfield
     public :: lua_getglobal
     public :: lua_geti
+    public :: lua_getmetatable
     public :: lua_gettable
     public :: lua_gettop
+    public :: lua_insert
     public :: lua_isboolean
     public :: lua_iscfunction
     public :: lua_isfunction
@@ -167,6 +165,7 @@ module lua
     public :: lua_len
     public :: lua_load
     public :: lua_newtable
+    public :: lua_next
     public :: lua_pcall
     public :: lua_pcallk
     public :: lua_pop
@@ -520,6 +519,22 @@ module lua
             integer(kind=c_int)                        :: lua_geti
         end function lua_geti
 
+        !> @brief If the value at the given index has a metatable, the
+        !! function pushes that metatable onto the stack and returns 1.
+        !! Otherwise, the function returns 0 and pushes nothing on the
+        !! stack.
+        !!
+        !! C signature: `int lua_getmetatable (lua_State *L, int index)`
+        function lua_getmetatable(l, idx) bind(c, name='lua_getmetatable')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of element from which the metatable will be extracted
+            integer(kind=c_int), intent(in), value    :: idx
+            ! Return value
+            integer(kind=c_int)                       :: lua_getmetatable
+        end function lua_getmetatable
+
         !> @brief Pushes onto the stack the value `t[k]`, where `t` is
         !! the value at the given index (a table) and `k` is the value
         !! at the top of the stack (key).
@@ -555,6 +570,21 @@ module lua
             ! Return value
             integer(kind=c_int)            :: lua_gettop
         end function lua_gettop
+
+        !> @brief Moves the top element into the given valid index,
+        !! shifting up the elements above this index to open space.
+        !!
+        !! This function cannot be called with a pseudo-index, because
+        !! a pseudo-index is not an actual stack position.
+        !!
+        !! C signature: `void lua_insert (lua_State *L, int index)`
+        subroutine lua_insert(l, idx) bind(c, name='lua_insert')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value    :: idx
+        end subroutine lua_insert
 
         !> @brief Returns 1 if the value at the given index is a
         !! C function, and 0 otherwise.
@@ -710,6 +740,63 @@ module lua
             ! Return value
             integer(kind=c_int)                       :: lua_load
         end function lua_load
+
+        !> @brief Pops a key from the stack, and pushes a key–value pair
+        !! from the table at the given index (the "next" pair after the
+        !! given key). If there are no more elements in the table, then
+        !! `lua_next` returns 0 (and pushes nothing).
+        !!
+        !! A typical traversal looks like this:
+        !!
+        !! @code{.c}
+        !! /* table is in the stack at index 't' */
+        !! lua_pushnil(L);  /* first key */
+        !! while (lua_next(L, t) != 0) {
+        !!   /* uses 'key' (at index -2) and 'value' (at index -1) */
+        !!   printf("%s - %s\n",
+        !!          lua_typename(L, lua_type(L, -2)),
+        !!          lua_typename(L, lua_type(L, -1)));
+        !!   /* removes 'value'; keeps 'key' for next iteration */
+        !!   lua_pop(L, 1);
+        !! }
+        !! @endcode
+        !!
+        !! or
+        !!
+        !! @code{.f90}
+        !! ! Table is in the stack at index 't'
+        !! ! Push nil to stack which tells lua_next() to get the first
+        !! ! key-value pair
+        !! call lua_pushnil(L)
+        !! do while (lua_next(L, t) /= 0)
+        !!   ! Uses 'key' (at index -2) and 'value' (at index -1)
+        !!   write(unit=output_unit, format='(A, " - ", A)')         &
+        !!          lua_typename(L, lua_type(L, -2)),                &
+        !!          lua_typename(L, lua_type(L, -1)))
+        !!   ! removes 'value'; keeps 'key' for next iteration
+        !!   call lua_pop(L, 1)
+        !! end do
+        !! @endcode
+        !!
+        !! While traversing a table, do not call `lua_tolstring`
+        !! directly on a key, unless you know that the key is actually a
+        !! string. Recall that `lua_tolstring` may change the value at
+        !! the given index; this confuses the next call to `lua_next`.
+        !!
+        !! See the Lua function `next` for the caveats of modifying the
+        !! table during its traversal.
+        !!
+        !! C signature: `int lua_next (lua_State *L, int index)`
+        function lua_next(l, idx) bind(c, name='lua_next')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of previous key extracted from table; set to `nil`
+            !! to extract first key
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            integer(kind=c_int)                    :: lua_next
+        end function lua_next
 
         !> @brief Does the equivalent to `t[k] = v`, where `t` is the
         !! value (table) at the given index and `v` is the value at the
