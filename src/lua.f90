@@ -10,6 +10,84 @@
 !> @brief A collection of ISO C binding interfaces to Lua 5.3 for
 !! Fortran 2003.
 !!
+!! C API functions which are not inmplemented:
+!!
+!!   * lua_atpanic
+!!   * lua_dump
+!!   * lua_getallocf
+!!   * lua_getextraspace
+!!   * lua_getuservalue
+!!   * lua_newstate
+!!   * lua_newthread
+!!   * lua_newuserdata
+!!   * lua_pushfstring
+!!   * lua_pushliteral
+!!   * lua_pushvfstring
+!!   * lua_rawgetp
+!!   * lua_rawsetp
+!!   * lua_resume
+!!   * lua_setallocf
+!!   * lua_setuservalue
+!!   * lua_tocfunction
+!!   * lua_topointer
+!!   * lua_touserdata
+!!   * lua_xmove
+!!   * lua_yield
+!!   * lua_yieldk
+!!
+!! Auxiliary functions which are not inmplemented:
+!!
+!!  * luaL_addchar
+!!  * luaL_addlstring
+!!  * luaL_addsize
+!!  * luaL_addstring
+!!  * luaL_addvalue
+!!  * luaL_argcheck
+!!  * luaL_argerror
+!!  * luaL_buffinit
+!!  * luaL_buffinitsize
+!!  * luaL_callmeta
+!!  * luaL_checkany
+!!  * luaL_checkinteger
+!!  * luaL_checklstring
+!!  * luaL_checknumber
+!!  * luaL_checkoption
+!!  * luaL_checkstack
+!!  * luaL_checkstring
+!!  * luaL_checktype
+!!  * luaL_checkudata
+!!  * luaL_checkversion
+!!  * luaL_error
+!!  * luaL_execresult
+!!  * luaL_fileresult
+!!  * luaL_getmetafield
+!!  * luaL_getmetatable
+!!  * luaL_getsubtable
+!!  * luaL_gsub
+!!  * luaL_loadbuffer
+!!  * luaL_loadbufferx
+!!  * luaL_newlib
+!!  * luaL_newlibtable
+!!  * luaL_newmetatable
+!!  * luaL_opt
+!!  * luaL_optinteger
+!!  * luaL_optlstring
+!!  * luaL_optnumber
+!!  * luaL_optstring
+!!  * luaL_prepbuffer
+!!  * luaL_prepbuffsize
+!!  * luaL_pushresult
+!!  * luaL_pushresultsize
+!!  * luaL_ref
+!!  * luaL_requiref
+!!  * luaL_setfuncs
+!!  * luaL_setmetatable
+!!  * luaL_testudata
+!!  * luaL_tolstring
+!!  * luaL_traceback
+!!  * luaL_unref
+!!  * luaL_where
+!!
 !! See @cite Lua53Manual for details.
 module lua
     use, intrinsic :: iso_fortran_env, only: LUA_INT => INT64,          &
