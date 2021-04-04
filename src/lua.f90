@@ -28,7 +28,7 @@ module lua
     ! lua_Reader
     ! lua_State
     ! lua_Unsigned
-    ! lua_Writer
+    !* lua_Writer - needed for lua_dump
 
     ! Unmplemented C API Functions (* considered important)
     !X lua_atpanic - demonstrate need
@@ -46,9 +46,7 @@ module lua
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
     !X lua_rawgetp - demonstrate need
     !X lua_rawsetp - demonstrate need
-    !* lua_replace
     !X lua_resume - demonstrate need
-    !* lua_rotate
     !X lua_setallocf - demonstrate need
     !* lua_setmetatable
     !X lua_setuservalue - demonstrate need
@@ -180,6 +178,8 @@ module lua
     public :: lua_rawset
     public :: lua_rawseti
     public :: lua_register
+    public :: lua_replace
+    public :: lua_rotate
     public :: lua_setfield
     public :: lua_setglobal
     public :: lua_seti
@@ -1599,6 +1599,42 @@ module lua
             !> Index of value in table
             integer(kind=c_int64_t), intent(in), value :: i
         end subroutine lua_rawseti
+
+        !> @brief Moves the top element into the given valid index
+        !! without shifting any element (therefore replacing the value
+        !! at that given index), and then pops the top element.
+        !!
+        !! C signature: `void lua_replace (lua_State *L, int index)`
+        subroutine lua_replace(l, idx) bind(c, name='lua_replace')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element to replace with top stack element
+            integer(kind=c_int), intent(in), value :: idx
+        end subroutine lua_replace
+
+        !> @brief Rotates the stack elements between the valid index
+        !! `idx` and the top of the stack.
+        !!
+        !! The elements are rotated `n` positions in the direction of
+        !! the top, for a positive `n`, or `-n` positions in the
+        !! direction of the bottom, for a negative `n`. The absolute
+        !! value of `n` must not be greater than the size of the slice
+        !! being rotated. This function cannot be called with a
+        !! pseudo-index, because a pseudo-index is not an actual stack
+        !! position.
+        !!
+        !! C signature: `void lua_rotate (lua_State *L, int idx, int n)`
+        subroutine lua_rotate(l, idx, n) bind(c, name='lua_rotate')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element acting as endpoint of rotation slice
+            integer(kind=c_int), intent(in), value :: idx
+            !> Positions rorated in the direction of the top of the
+            !! stack
+            integer(kind=c_int), intent(in), value :: n
+        end subroutine lua_rotate
 
         !> @brief Pops a value from the stack and sets it as the new
         !! value of global `name`.
