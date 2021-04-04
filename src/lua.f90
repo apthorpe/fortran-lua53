@@ -31,27 +31,21 @@ module lua
     ! lua_Writer
 
     ! Unmplemented C API Functions (* considered important)
-    !X lua_atpanic
+    !X lua_atpanic - demonstrate need
     !* lua_dump
-    !X lua_getallocf
-    !X lua_getextraspace
-    !x lua_getuservalue
-    !X lua_newstate
-    !X lua_newthread
-    !X lua_newuserdata
-    !o lua_numbertointeger
-    !x lua_pushccfunction
-    !o lua_pushfstring
-    ! lua_pushliteral
-    !o lua_pushvfstring
-    ! lua_rawequal
-    ! lua_rawget
-    ! lua_rawgeti
-    ! lua_rawgetp
-    ! lua_rawlen
-    ! lua_rawset
-    ! lua_rawseti
-    ! lua_rawsetp
+    !X lua_getallocf - demonstrate need
+    !X lua_getextraspace - demonstrate need
+    !x lua_getuservalue - demonstrate need
+    !o lua_newstate - use lual_newstate
+    !X lua_newthread - demonstrate need
+    !X lua_newuserdata - demonstrate need
+    !o lua_numbertointeger - equivalent to Fortran's int() intrinsic
+    !x lua_pushcfunction - demonstrate need
+    !o lua_pushfstring - compose string with format() then use lua_pushstring
+    !o lua_pushliteral - use lua_pushstring
+    !o lua_pushvfstring - compose string with format() then use lua_pushstring
+    !X lua_rawgetp - demonstrate need
+    !X lua_rawsetp - demonstrate need
     ! lua_replace
     ! lua_resume
     ! lua_rotate
@@ -179,6 +173,12 @@ module lua
     public :: lua_pushstring
     public :: lua_pushthread
     public :: lua_pushvalue
+    public :: lua_rawequal
+    public :: lua_rawget
+    public :: lua_rawgeti
+    public :: lua_rawlen
+    public :: lua_rawset
+    public :: lua_rawseti
     public :: lua_register
     public :: lua_setfield
     public :: lua_setglobal
@@ -1486,6 +1486,119 @@ module lua
             !> Index of element to copy and push onto stack
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_pushvalue
+
+        !> @brief Returns 1 (true) if the two values in indices index1
+        !! and index2 are primitively equal (that is, without calling
+        !! the `__eq` metamethod).
+        !!
+        !! Otherwise returns 0 (false). Also returns 0 if any of the
+        !! indices are not valid.
+        !!
+        !! C signature: `int lua_rawequal (lua_State *L, int index1, int index2)`
+        function lua_rawequal(l, idx1, idx2) bind(c, name='lua_rawequal')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr), intent(in), value :: l
+            !> Stack index of first value
+            integer(kind=c_int), intent(in), value :: idx1
+            !> Stack index of second value
+            integer(kind=c_int), intent(in), value :: idx2
+            ! Return value
+            integer(kind=c_int)            :: lua_rawequal
+        end function lua_rawequal
+
+        !> @brief Pushes onto the stack the value `t[k]`, where t is the
+        !! value at the given index and `k` is the value at the top of
+        !! the stack.
+        !!
+        !! This function pops the key from the stack, pushing the
+        !! resulting value in its place. Unlike `lua_gettable`, this
+        !! function does not trigger metamethods.
+        !!
+        !! Returns the type of the pushed value.
+        !!
+        !! C signature: `int lua_rawget (lua_State *L, int index)`
+        function lua_rawget(l, idx) bind(c, name='lua_rawget')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr), intent(in), value :: l
+            !> Stack index of table
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            integer(kind=c_int)            :: lua_rawget
+        end function lua_rawget
+
+        !> @brief Pushes onto the stack the value of the indexed table
+        !! element `t[n]`. Returns the type of that value.
+        !!
+        !! Similar to `lua_geti` but uses "raw" access and does not
+        !! trigger metamethods.
+        !!
+        !! C signature: `int lua_rawgeti (lua_State *L, int index, lua_Integer n)`
+        function lua_rawgeti(l, idx, n) bind(c, name='lua_rawgeti')
+            import :: c_int, c_ptr, c_int64_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),             intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value     :: idx
+            !> Index of value in table
+            integer(kind=c_int64_t), intent(in), value :: n
+            ! Return value
+            integer(kind=c_int)                        :: lua_rawgeti
+        end function lua_rawgeti
+
+        !> @brief Returns the raw "length" of the value at the given index.
+        !!
+        !! For strings, this is the string length; for tables, this is the
+        !! result of the length operator ('`#`') with no metamethods; for
+        !! userdata, this is the size of the block of memory allocated for
+        !! the userdata; for other values, it is 0.
+        !!
+        !! C signature: `size_t lua_rawlen (lua_State *L, int index)`
+        function lua_rawlen(l, idx) bind(c, name='lua_rawlen')
+            import :: c_int, c_ptr, c_size_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            integer(kind=c_size_t)                 :: lua_rawlen
+        end function lua_rawlen
+
+        !> @brief Does the equivalent to `t[k] = v`, where `t` is the
+        !! value at the given index, `v` is the value at the top of the
+        !! stack, and `k` is the value just below the top.
+        !!
+        !! This function pops both the key and the value from the stack.
+        !! Unlike `lua_settable`, this function will not trigger
+        !! metamethods.
+        !!
+        !! C signature: `void lua_rawset (lua_State *L, int index)`
+        subroutine lua_rawset(l, idx) bind(c, name='lua_rawset')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value    :: idx
+        end subroutine lua_rawset
+
+        !> @brief Does the equivalent of `t[i] = v`, where `t` is the
+        !! table at the given index and `v` is the value at the top of
+        !! the stack.
+        !!
+        !! This function pops the value from the stack. The assignment
+        !! is raw, that is, it does not invoke the `__newindex` metamethod.
+        !!
+        !! C signature: `void lua_rawseti (lua_State *L, int index, lua_Integer i)`
+        subroutine lua_rawseti(l, idx, i) bind(c, name='lua_rawseti')
+            import :: c_int, c_ptr, c_int64_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),             intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value     :: idx
+            !> Index of value in table
+            integer(kind=c_int64_t), intent(in), value :: i
+        end subroutine lua_rawseti
 
         !> @brief Pops a value from the stack and sets it as the new
         !! value of global `name`.
