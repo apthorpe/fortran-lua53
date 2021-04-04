@@ -5,12 +5,13 @@
 
 !> @brief Null unit test to verify TOAST library is properly linked
 program ut_null
-    use, intrinsic :: iso_fortran_env, only: WP => REAL64
-    use toast
+    use, intrinsic :: iso_fortran_env, only: WP => REAL64,              &
+        stdout=>OUTPUT_UNIT
+    use, intrinsic :: iso_c_binding, only: c_null_ptr
+    use :: toast
+    use :: lua
     implicit none
 
-    real(kind=WP) :: refval
-    integer :: i
     integer :: id
     type(TestCase) :: test
 
@@ -20,7 +21,9 @@ program ut_null
 
     !!! Test exposed functions
 
-    ! 1) TBD
+    id = lua_version(c_null_ptr)
+    write(unit=stdout, fmt='(A, I8)') "Lua version ", id
+    call test%asserttrue(id > 0, message="lua_version() > 0")
 
     ! Print summary at the end
     call printsummary(test)

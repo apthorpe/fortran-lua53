@@ -48,7 +48,6 @@ module lua
     !X lua_rawsetp - demonstrate need
     !X lua_resume - demonstrate need
     !X lua_setallocf - demonstrate need
-    !* lua_setmetatable
     !X lua_setuservalue - demonstrate need
     !* lua_stringtonumber
     !X lua_tocfunction - demonstrate need
@@ -56,7 +55,6 @@ module lua
     !X lua_topointer - demonstrate need
     !X lua_touserdata - demonstrate need
     !X lua_upvalueindex - demonstrate need
-    !* lua_version
     !X lua_xmove - demonstrate need
     !X lua_yield - demonstrate need
     !X lua_yieldk - demonstrate need
@@ -183,6 +181,7 @@ module lua
     public :: lua_setfield
     public :: lua_setglobal
     public :: lua_seti
+    public :: lua_setmetatable
     public :: lua_settable
     public :: lua_settop
     public :: lua_status
@@ -194,6 +193,7 @@ module lua
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
+    public :: lua_version
 
     ! Auxiliary Library functions
     public :: lual_dofile
@@ -854,6 +854,18 @@ module lua
             !> Index of value in table
             integer(kind=c_int64_t), intent(in), value :: n
         end subroutine lua_seti
+
+        !> @brief Pops a table from the stack and sets it as the new
+        !! metatable for the value at the given index.
+        !!
+        !! C signature: `void lua_setmetatable (lua_State *L, int index)`
+        subroutine lua_setmetatable(l, idx) bind(c, name='lua_setmetatable')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of stack to associate with metatable
+            integer(kind=c_int), intent(in), value    :: idx
+        end subroutine lua_setmetatable
 
         !> @brief Does the equivalent to t[k] = v, where t is the value
         !! at the given index, v is the value at the top of the stack,
@@ -1664,6 +1676,23 @@ module lua
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_settop
 
+        !> @brief Returns the address of the version number (a C static
+        !! variable) stored in the Lua core.
+        !!
+        !! When called with a valid `lua_State`, returns the address of
+        !! the version used to create that state. When called with
+        !! `NULL`, returns the address of the version running the call.
+        !!
+        !! C signature: `const lua_Number *lua_version (lua_State *L)`
+        function lua_version_(l) bind(c, name='lua_version')
+            import :: c_ptr, c_double
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            ! Return value
+            ! real(kind=c_double)                    :: lua_version
+            type(c_ptr)                            :: lua_version_
+        end function lua_version_
+
         ! Auxilliary library function
 
         !> @brief Opens all standard Lua libraries into the given state.
@@ -2139,6 +2168,31 @@ contains
         return
     end function lua_typename
 
+    !> @brief Converts the Lua value at the given index to the signed
+    !! real type `lua_Number`.
+    !!
+    !! The Lua value must be an number or a string convertible to a
+    !! number; otherwise, `lua_tonumber` returns 0
+    !!
+    !! C signature: `lua_Number lua_tonumber (lua_State *L, int index)`
+    !!
+    !! @note Fortran wrapper around `lua_tonumberx()` in Lua C API
+    function lua_version(l)
+        use, intrinsic :: iso_fortran_env, only: REAL64
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        ! Return value
+        integer                 :: lua_version
+
+        real(kind=REAL64)       :: tmp_version
+        continue
+
+        call c_f_real_ptr(lua_version_(l), tmp_version)
+        lua_version = int(tmp_version)
+
+        return
+    end function lua_version
+
     !> @brief Loads and runs the given file.
     !!
     !! Macro replacement that calls `lual_loadfile()` and `lua_pcall()`.
@@ -2391,5 +2445,26 @@ contains
 
         return
     end subroutine c_f_string_ptr
+
+    !> @brief Utility routine that copies a Lua_Number, passed as
+    !! a C pointer, to a Fortran real(double).
+    subroutine c_f_real_ptr(c_real, f_real)
+        use, intrinsic :: iso_fortran_env, only: REAL64
+        !> Pointer to C double (Lua_Number)
+        type(c_ptr),      intent(in)           :: c_real
+        !> Fortran string
+        real(kind=REAL64), intent(out)         :: f_real
+
+        real(kind=c_double), pointer           :: ptr_to_real
+        continue
+
+        f_real = 0.0_REAL64
+        if (c_associated(c_real)) then
+            call c_f_pointer(c_real, ptr_to_real)
+            f_real = real(ptr_to_real, kind=REAL64)
+        end if
+
+        return
+    end subroutine c_f_real_ptr
     !!!@}
 end module lua
