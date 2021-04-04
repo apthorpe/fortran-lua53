@@ -710,6 +710,144 @@ program ut_tablecheck
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 0, message="Expect empty stack after gv4a test")
 
+    ! -- gv4b is a mixed array
+    ! gv4b = { "Hydraulic pump", 124.95, -2, status = "Backordered", partslist = { bearings = 2, seals = 8, impeller = 1 }, false }
+
+    rc = lua_getglobal(l, 'gv4b')
+    call test%assertequal(rc, LUA_TTABLE, message="gv4b is type LUA_TTABLE")
+    tf = lua_istable(l, -1)
+    call test%asserttrue(tf, message="lua_istable(gv4b) is .true.")
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 4_INT64, message="lua_len(gv4b) == 4_INT64 (Lua-ism: 4 indices; ignore the 2 keys)")
+    ! Remove length
+    call lua_pop(l, 1)
+
+    ! gv4b["status"] == "Backordered"
+    rc = lua_getfield(l, -1, "status")
+    call test%assertequal(rc, LUA_TSTRING, message='gv4b["status"] is type LUA_TSTRING')
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message='lua_isnumber(gv4b["status"]) is .false.')
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message='lua_isstring(gv4b["status"]) is .true.')
+    cval = lua_tostring(l, -1)
+    call test%assertequal("Backordered", cval, message='lua_string(gv4b["status"]) == "Backordered"')
+    call lua_pop(l, 1)
+
+    ! gv2d[1] == "Hydraulic pump"
+    rc = lua_geti(l, -1, 1_INT64)
+    call test%assertequal(rc, LUA_TSTRING, message="gv4b[1] is type LUA_TSTRING")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv4b[1]) is .true.")
+    cval = lua_tostring(l, -1)
+    call test%assertequal("Hydraulic pump", cval, message='lua_tostring(gv4b[1]) == "Hydraulic pump"')
+    call lua_pop(l, 1)
+
+    ! gv4b[2] == 124.95
+    rc = lua_geti(l, -1, 2_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv4b[2] is type LUA_TNUMBER")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv4b[2]) is .true. (Lua-ism: numbers can be converted to strings)")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv4b[2]) is .true.")
+    dval = lua_tonumber(l, -1)
+    call test%assertequal(124.95_WP, dval, message='lua_tonumber(gv4b[2]) == 124.95')
+    call lua_pop(l, 1)
+
+    ! gv4b[3] == -2
+    rc = lua_geti(l, -1, 3_INT64)
+    call test%assertequal(rc, LUA_TNUMBER, message="gv4b[3] is type LUA_TNUMBER")
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message="lua_isstring(gv4b[3]) is .true. (Lua-ism: numbers can be converted to strings)")
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message="lua_isnumber(gv4b[3]) is .true.")
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv4b[3]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(-2_INT64, ival, message='lua_tointeger(gv4b[3]) == -2')
+    dval = lua_tonumber(l, -1)
+    call test%assertequal(-2.0_WP, dval, message='lua_tonumber(gv4b[3]) == -2.0')
+    call lua_pop(l, 1)
+
+    ! gv4b["partslist"] == { bearings = 2, seals = 8, impeller = 1 }
+    rc = lua_getfield(l, -1, "partslist")
+    call test%assertequal(rc, LUA_TTABLE, message='gv4b["partslist"] is type LUA_TTABLE')
+
+    call lua_len(l, -1)
+    tlength = lua_tointeger(l, -1)
+    call test%assertequal(tlength, 0_INT64, message='lua_len(gv4b["partslist"]) == 0_INT64 (Lua-ism:...)')
+    ! Remove length
+    call lua_pop(l, 1)
+
+    rc = lua_getfield(l, -1, "bearings")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv4b[5]["bearings"] is type LUA_TNUMBER')
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message='lua_isstring(gv4b[5]["bearings"]) is .true. (Lua-ism: numbers can be converted to strings)')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv4b[5]["bearings"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv4b[5]["bearings"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(2_INT64, ival, message='lua_tointeger(gv4b[5]) == 2')
+    call lua_pop(l, 1)
+
+    rc = lua_getfield(l, -1, "seals")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv4b[5]["seals"] is type LUA_TNUMBER')
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message='lua_isstring(gv4b[5]["seals"]) is .true. (Lua-ism: numbers can be converted to strings)')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv4b[5]["seals"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv4b[5]["seals"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(8_INT64, ival, message='lua_tointeger(gv4b[5]["seals"]) == 8')
+    call lua_pop(l, 1)
+
+    rc = lua_getfield(l, -1, "impeller")
+    call test%assertequal(rc, LUA_TNUMBER, message='gv4b[5]["impeller"] is type LUA_TNUMBER')
+    tf = lua_isstring(l, -1)
+    call test%asserttrue(tf, message='lua_isstring(gv4b[5]["impeller"]) is .true. (Lua-ism: numbers can be converted to strings)')
+    tf = lua_isnumber(l, -1)
+    call test%asserttrue(tf, message='lua_isnumber(gv4b[5]["impeller"]) is .true.')
+    tf = lua_isinteger(l, -1)
+    call test%asserttrue(tf, message='lua_isinteger(gv4b[5]["impeller"]) is .true.')
+    ival = lua_tointeger(l, -1)
+    call test%assertequal(1_INT64, ival, message='lua_tointeger(gv4b[5]["impeller"]) == 1')
+    call lua_pop(l, 1)
+
+    ! key in subtable doesn't exist
+    rc = lua_getfield(l, -1, "sandwich")
+    call test%assertequal(rc, LUA_TNIL, message='gv4b[5]["sandwich"] is type LUA_TNIL')
+    call lua_pop(l, 1)
+
+    ! Remove subtable
+    call lua_pop(l, 1)
+
+    ! gv4b[4] == false
+    rc = lua_geti(l, -1, 4_INT64)
+    call test%assertequal(rc, LUA_TBOOLEAN, message="gv4b[4] is type LUA_TBOOLEAN")
+    call test%asserttrue((rc /= LUA_TNIL), message="gv4b[4] is not type LUA_TNIL")
+    call test%asserttrue((rc /= LUA_TNUMBER), message="gv4b[4] is not type LUA_TNUMBER")
+    call test%asserttrue((rc /= LUA_TSTRING), message="gv4b[4] is not type LUA_TSTRING")
+    tf = lua_isboolean(l, -1)
+    call test%asserttrue(tf, message="lua_isboolean(gv4b[4]) is .true.")
+    tf = lua_isstring(l, -1)
+    call test%assertfalse(tf, message="lua_isstring(gv4b[4]) is .false.")
+    tf = lua_isnumber(l, -1)
+    call test%assertfalse(tf, message="lua_isnumber(gv4b[4]) is .false.")
+    tf = lua_isinteger(l, -1)
+    call test%assertfalse(tf, message='lua_isinteger(gv4b[4]) is .false.')
+    tf = lua_toboolean(l, -1)
+    call test%assertfalse(tf, message='lua_toboolean(gv4b[4]) == .false.')
+    call lua_pop(l, 1)
+
+    ! Remove table
+    call lua_pop(l, 1)
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 0, message="Expect empty stack after gv4b test")
+
     ! Close the interpreter
 
     nstack = lua_gettop(l)

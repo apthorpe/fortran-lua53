@@ -32,4 +32,7 @@ gv3b = { a = 5, b = 4, c = 3, d = 2, e = 1 }
 -- gv4a is a mixed array
 gv4a = { "Hydraulic pump", 124.95, -2, "Backordered", { bearings = 2, seals = 8, impeller = 1 }, false }
 
+-- gv4b is a mixed array
+gv4b = { "Hydraulic pump", 124.95, -2, status = "Backordered", partslist = { bearings = 2, seals = 8, impeller = 1 }, false }
+
 
