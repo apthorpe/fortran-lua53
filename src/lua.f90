@@ -39,7 +39,6 @@ module lua
     !o lua_newstate - use lual_newstate
     !X lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
-    !o lua_numbertointeger - equivalent to Fortran's int() intrinsic
     !o lua_pushfstring - compose string with format() then use lua_pushstring
     !o lua_pushliteral - use lua_pushstring
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
@@ -117,6 +116,7 @@ module lua
     ! Implemented C API Functions
     public :: lua_absindex
     public :: lua_arith
+    ! lua_atpanic - demonstrate need - low-level process signalling beyond scope
     public :: lua_call
     public :: lua_callk
     public :: lua_checkstack
@@ -125,14 +125,18 @@ module lua
     public :: lua_concat
     public :: lua_copy
     public :: lua_createtable
+    !* lua_dump
     public :: lua_error
     public :: lua_gc
+    ! lua_getallocf - demonstrate need - low-level memory management beyond scope
+    ! lua_getextraspace - demonstrate need - low-level memory management beyond scope
     public :: lua_getfield
     public :: lua_getglobal
     public :: lua_geti
     public :: lua_getmetatable
     public :: lua_gettable
     public :: lua_gettop
+    ! lua_getuservalue - demonstrate need - uservalue/userdata beyond scope
     public :: lua_insert
     public :: lua_isboolean
     public :: lua_iscfunction
@@ -149,59 +153,127 @@ module lua
     public :: lua_isyieldable
     public :: lua_len
     public :: lua_load
+    ! lua_newstate - use lual_newstate
     public :: lua_newtable
+    ! lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
+    ! lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
     public :: lua_next
+    public :: lua_numbertointeger
     public :: lua_pcall
     public :: lua_pcallk
     public :: lua_pop
     public :: lua_pushboolean
     public :: lua_pushcclosure
+    ! lua_pushfstring - compose string with format() then use lua_pushstring
     public :: lua_pushglobaltable
     public :: lua_pushinteger
     public :: lua_pushlightuserdata
+    ! lua_pushliteral - use lua_pushstring
     public :: lua_pushlstring
     public :: lua_pushnil
     public :: lua_pushnumber
     public :: lua_pushstring
     public :: lua_pushthread
     public :: lua_pushvalue
+    ! lua_pushvfstring - compose string with format() then use lua_pushstring
     public :: lua_rawequal
     public :: lua_rawget
     public :: lua_rawgeti
+    ! lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
     public :: lua_rawlen
     public :: lua_rawset
     public :: lua_rawseti
+    ! lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
     public :: lua_register
     public :: lua_replace
+    ! lua_resume - demonstrate need - coroutines and thread mgmt beyond scope
     public :: lua_rotate
+    ! lua_setallocf - demonstrate need - low-level memory management beyond scope
     public :: lua_setfield
     public :: lua_setglobal
     public :: lua_seti
     public :: lua_setmetatable
     public :: lua_settable
     public :: lua_settop
+    ! lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
     public :: lua_status
     public :: lua_stringtonumber
     public :: lua_toboolean
+    ! lua_tocfunction - demonstrate need - partial support of C functions
     public :: lua_tointeger
     public :: lua_tointegerx
     public :: lua_tonumber
     public :: lua_tonumberx
+    ! lua_topointer - demonstrate need - used mainly for hashing and debugging
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
     public :: lua_upvalueindex
+    ! lua_touserdata - demonstrate need - uservalue/userdata beyond scope
     public :: lua_version
+    ! lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
+    ! lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
+    ! lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
 
     ! Auxiliary Library functions
+    ! luaL_addchar
+    ! luaL_addlstring
+    ! luaL_addsize
+    ! luaL_addstring
+    ! luaL_addvalue
+    ! luaL_argcheck
+    ! luaL_argerror
+    ! luaL_buffinit
+    ! luaL_buffinitsize
+    ! luaL_callmeta
+    ! luaL_checkany
+    ! luaL_checkinteger
+    ! luaL_checklstring
+    ! luaL_checknumber
+    ! luaL_checkoption
+    ! luaL_checkstack
+    ! luaL_checkstring
+    ! luaL_checktype
+    ! luaL_checkudata
+    ! luaL_checkversion
     public :: lual_dofile
     public :: lual_dostring
+    ! luaL_error
+    ! luaL_execresult
+    ! luaL_fileresult
+    ! luaL_getmetafield
+    ! luaL_getmetatable
+    ! luaL_getsubtable
+    ! luaL_gsub
+    ! luaL_loadbuffer
+    ! luaL_loadbufferx
     public :: lual_loadfile
     public :: lual_loadfilex
     public :: lual_loadstring
+    ! luaL_newlib
+    ! luaL_newlibtable
+    ! luaL_newmetatable
     public :: lual_newstate
     public :: lual_openlibs
+    ! luaL_opt
+    ! luaL_optinteger
+    ! luaL_optlstring
+    ! luaL_optnumber
+    ! luaL_optstring
+    ! luaL_prepbuffer
+    ! luaL_prepbuffsize
+    ! luaL_pushresult
+    ! luaL_pushresultsize
+    ! luaL_ref
+    ! luaL_requiref
+    ! luaL_setfuncs
+    ! luaL_setmetatable
+    ! luaL_testudata
+    ! luaL_tolstring
+    ! luaL_traceback
     public :: lual_typename
+    ! luaL_unref
+    ! luaL_where
 
     !> @name Thread control options
 
@@ -810,6 +882,31 @@ module lua
             ! Return value
             integer(kind=c_int)                    :: lua_next
         end function lua_next
+
+        !> @brief Converts a Lua float to a Lua integer.
+        !!
+        !! This macro assumes that `n` has an integral value. If that
+        !! value is within the range of Lua integers, it is converted to
+        !! an integer and assigned to `*p`. The macro results in a
+        !! boolean indicating whether the conversion was successful.
+        !!
+        !! It is probably best to use Fortran's `int()` intrinsic
+        !! instead.
+        !!
+        !! @note This range test can be tricky to do correctly without
+        !! this macro, due to roundings.
+        !!
+        !! C signature: `int lua_numbertointeger (lua_Number n, lua_Integer *p)`
+        function lua_numbertointeger(n, i) bind(c, name='lua_numbertointeger')
+            import :: c_int, c_double, c_long_long
+            !> Pointer to Lua interpreter state
+            real(kind=c_double),       intent(in), value :: n
+            !> Index of previous key extracted from table; set to `nil`
+            !! to extract first key
+            integer(kind=c_long_long), intent(in)        :: i
+            ! Return value
+            integer(kind=c_int)                          :: lua_numbertointeger
+        end function lua_numbertointeger
 
         !> @brief Does the equivalent to `t[k] = v`, where `t` is the
         !! value (table) at the given index and `v` is the value at the
