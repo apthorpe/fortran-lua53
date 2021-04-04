@@ -33,19 +33,17 @@ module lua
     ! Unmplemented C API Functions (* considered important)
     !X lua_atpanic
     !* lua_dump
-    ! lua_error
     !X lua_getallocf
     !X lua_getextraspace
     !x lua_getuservalue
     !X lua_newstate
     !X lua_newthread
     !X lua_newuserdata
-    !* lua_numbertointeger
-    ! lua_pushccfunction
-    ! lua_pushfstring
-    ! lua_pushglobaltable
+    !o lua_numbertointeger
+    !x lua_pushccfunction
+    !o lua_pushfstring
     ! lua_pushliteral
-    ! lua_pushvfstring
+    !o lua_pushvfstring
     ! lua_rawequal
     ! lua_rawget
     ! lua_rawgeti
@@ -141,6 +139,7 @@ module lua
     public :: lua_concat
     public :: lua_copy
     public :: lua_createtable
+    public :: lua_error
     public :: lua_gc
     public :: lua_getfield
     public :: lua_getglobal
@@ -171,6 +170,7 @@ module lua
     public :: lua_pop
     public :: lua_pushboolean
     public :: lua_pushcclosure
+    public :: lua_pushglobaltable
     public :: lua_pushinteger
     public :: lua_pushlightuserdata
     public :: lua_pushlstring
@@ -428,6 +428,21 @@ module lua
             ! Return value
             integer(kind=c_int)                    :: lua_compare
         end function lua_compare
+
+        !> @brief Generates a Lua error, using the value at the top of
+        !! the stack as the error object.
+        !!
+        !! This function does a long jump, and therefore never returns
+        !! (see `luaL_error`)
+        !!
+        !! C signature: `int lua_error(lua_State *L)`
+        function lua_error(l) bind(c, name='lua_error')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            ! Return value
+            integer(kind=c_int)                    :: lua_error
+        end function lua_error
 
         !> @brief Controls the garbage collector.
         !!
@@ -1148,6 +1163,15 @@ module lua
             ! Return value
             integer(kind=c_int)                         :: lua_pcallk
         end function lua_pcallk
+
+        !> @brief Pushes the global environment onto the stack.
+        !!
+        !! C signature: `void lua_pushglobaltable (lua_State *L)`
+        subroutine lua_pushglobaltable(l) bind(c, name='lua_pushglobaltable')
+            import :: c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+        end subroutine lua_pushglobaltable
 
         !> @brief Pushes the string pointed to by `s` with size `len`
         !! onto the stack.
