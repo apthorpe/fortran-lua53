@@ -46,22 +46,22 @@ module lua
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
     !X lua_rawgetp - demonstrate need
     !X lua_rawsetp - demonstrate need
-    ! lua_replace
-    ! lua_resume
-    ! lua_rotate
-    ! lua_setallocf
-    ! lua_setmetatable
-    ! lua_setuservalue
-    ! lua_stringtonumber
-    ! lua_tocfunction
-    ! lua_tolstring
-    ! lua_topointer
-    ! lua_touserdata
-    ! lua_upvalueindex
+    !* lua_replace
+    !X lua_resume - demonstrate need
+    !* lua_rotate
+    !X lua_setallocf - demonstrate need
+    !* lua_setmetatable
+    !X lua_setuservalue - demonstrate need
+    !* lua_stringtonumber
+    !X lua_tocfunction - demonstrate need
+    !* lua_tolstring
+    !X lua_topointer - demonstrate need
+    !X lua_touserdata - demonstrate need
+    !X lua_upvalueindex - demonstrate need
     !* lua_version
-    ! lua_xmove
-    ! lua_yield
-    ! lua_yieldk
+    !X lua_xmove - demonstrate need
+    !X lua_yield - demonstrate need
+    !X lua_yieldk - demonstrate need
 
     ! The Lua debug interface is not supported
 
