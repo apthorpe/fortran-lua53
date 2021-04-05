@@ -17,12 +17,9 @@
 !!   * lua_getallocf
 !!   * lua_getextraspace
 !!   * lua_newstate
-!!   * lua_newuserdata
 !!   * lua_pushfstring
 !!   * lua_pushliteral
 !!   * lua_pushvfstring
-!!   * lua_rawgetp
-!!   * lua_rawsetp
 !!   * lua_resume
 !!   * lua_setallocf
 !!   * lua_setuservalue
@@ -110,12 +107,9 @@ module lua
     !X lua_getallocf - demonstrate need - low-level memory management beyond scope
     !X lua_getextraspace - demonstrate need - low-level memory management beyond scope
     !o lua_newstate - use lual_newstate
-    !X lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
     !o lua_pushfstring - compose string with format() then use lua_pushstring
     !o lua_pushliteral - use lua_pushstring
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
-    !X lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
-    !X lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
     !X lua_setallocf - demonstrate need - low-level memory management beyond scope
     !X lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
     !X lua_tocfunction - demonstrate need - partial support of C functions
@@ -244,7 +238,7 @@ module lua
     ! public :: lua_newstate - use lual_newstate
     public :: lua_newtable
     public :: lua_newthread
-    ! public :: lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
+    public :: lua_newuserdata
     public :: lua_next
     public :: lua_numbertointeger
     public :: lua_pcall
@@ -267,11 +261,11 @@ module lua
     public :: lua_rawequal
     public :: lua_rawget
     public :: lua_rawgeti
-    ! public :: lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
+    public :: lua_rawgetp
     public :: lua_rawlen
     public :: lua_rawset
     public :: lua_rawseti
-    ! public :: lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
+    public :: lua_rawsetp
     public :: lua_register
     public :: lua_replace
     public :: lua_resume
@@ -999,6 +993,24 @@ module lua
             ! Return value
             type(c_ptr)                    :: lua_newthread
         end function lua_newthread
+
+        !> @brief This function allocates a new block of memory with the
+        !! given size, pushes onto the stack a new full userdata with the
+        !! block address, and returns this address.
+        !!
+        !! The host program can freely use this memory.
+        !!
+        !! C signature: `void *lua_newuserdata (lua_State *L, size_t size)`
+        function lua_newuserdata(l, size) bind(c, name='lua_newuserdata')
+            import :: c_int, c_ptr, c_size_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Size of userdata memory block
+            integer(kind=c_size_t), intent(in), value :: size
+
+            ! Return value
+            type(c_ptr)                               :: lua_newuserdata
+        end function lua_newuserdata
 
         !> @brief Pops a key from the stack, and pushes a key–value pair
         !! from the table at the given index (the "next" pair after the
@@ -1898,6 +1910,26 @@ module lua
             integer(kind=c_int)                        :: lua_rawgeti
         end function lua_rawgeti
 
+        !> @brief Pushes onto the stack the value t[`k`], where `t` is
+        !! the table at the given index and `k` is the pointer `p`
+        !! represented as a light userdata.
+        !!
+        !! The access is raw; that is, it does not invoke the `__index` metamethod.
+        !! Returns the type of the pushed value.
+        !!
+        !! C signature: `int lua_rawgetp (lua_State *L, int index, const void *p)`
+        function lua_rawgetp(l, idx, p) bind(c, name='lua_rawgetp')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value :: idx
+            !> Pointer to be used as table key
+            type(c_ptr),         intent(in), value :: p
+            ! Return value
+            integer(kind=c_int)                    :: lua_rawgetp
+        end function lua_rawgetp
+
         !> @brief Returns the raw "length" of the value at the given index.
         !!
         !! For strings, this is the string length; for tables, this is the
@@ -1950,6 +1982,24 @@ module lua
             !> Index of value in table
             integer(kind=c_long_long), intent(in), value :: i
         end subroutine lua_rawseti
+
+        !> @brief Does the equivalent of `t[p] = v`, where `t` is the
+        !! table at the given index, `p` is encoded as a light userdata,
+        !! and `v` is the value at the top of the stack.
+        !!
+        !! This function pops the value from the stack. The assignment
+        !! is raw, that is, it does not invoke `__newindex` metamethod.
+        !!
+        !! C signature: `void lua_rawsetp (lua_State *L, int index, const void *p)`
+        subroutine lua_rawsetp(l, idx, p) bind(c, name='lua_rawsetp')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of table on stack
+            integer(kind=c_int), intent(in), value :: idx
+            !> Pointer to be used as table key
+            type(c_ptr),         intent(in), value :: p
+        end subroutine lua_rawsetp
 
         !> @brief Moves the top element into the given valid index
         !! without shifting any element (therefore replacing the value
