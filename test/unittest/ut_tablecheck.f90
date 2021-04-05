@@ -871,7 +871,7 @@ program ut_tablecheck
     tmp_ptr = lua_pushstring(l, "Gate valve" // c_null_char)
     call lua_setfield(l, -2, "Item")
     ! Second...
-    call lua_pushinteger(l, 250)
+    call lua_pushinteger(l, 250_INT64)
     call lua_setfield(l, -2, "Weight")
     ! Third...
     call lua_pushnumber(l, 379.95_WP)

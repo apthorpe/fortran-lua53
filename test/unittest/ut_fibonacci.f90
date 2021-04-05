@@ -5,19 +5,20 @@
 
 !> @brief Unit test replicating the fibonacci example
 program ut_fibonacci
-    use, intrinsic :: iso_fortran_env, only: WP => REAL64
+    use, intrinsic :: iso_fortran_env, only: WP => REAL64, INT64
     use, intrinsic :: iso_c_binding, only: c_ptr
     use :: lua
     use :: toast
     implicit none
 
     ! Lua state object
-    type(c_ptr) :: l
-    integer     :: nargs    = 1
-    integer     :: nresults = 2
-    integer     :: rc
-    integer     :: r1, r2   = 0
-    integer     :: x        = 10
+    type(c_ptr)         :: l
+    integer             :: nargs    = 1
+    integer             :: nresults = 2
+    integer             :: rc
+    integer(kind=INT64) :: r1       = 0_INT64
+    integer(kind=INT64) :: r2       = 0_INT64
+    integer(kind=INT64) :: x        = 10_INT64
 
     character(len=32) :: fname
 
@@ -56,7 +57,7 @@ program ut_fibonacci
     call test%asserttrue(is_fn, message="Success from lua_isfunction - fib is a function")
 
     if (is_fn) then
-        x = 10
+        x = 10_INT64
         call lua_pushinteger(l, x)
 
         nargs = 1
@@ -66,10 +67,10 @@ program ut_fibonacci
         call test%assertequal(rc, LUA_OK, message="Successful call (status is LUA_OK)")
 
         r1 = lua_tointeger(l, -1)
-        call test%assertequal(r1, 34, message="Successfully calculated fib prev (r1 = 34)")
+        call test%assertequal(r1, 34_INT64, message="Successfully calculated fib prev (r1 = 34_INT64)")
 
         r2 = lua_tointeger(l, -2)
-        call test%assertequal(r2, 55, message="Successfully calculated fib curr (r2 = 55)")
+        call test%assertequal(r2, 55_INT64, message="Successfully calculated fib curr (r2 = 55_INT64)")
 
         call lua_pop(l, 2)
 

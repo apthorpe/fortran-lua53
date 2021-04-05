@@ -213,7 +213,7 @@ program ut_typecheck
     call test%assertequal(nstack, 1, message="Expect one value (function) on stack before pushing argument")
 
     ! Push function argument (11) to stack
-    call lua_pushinteger(l, 11)
+    call lua_pushinteger(l, 11_INT64)
 
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 2, message="Expect two values (function + arg) before gv12 call")
