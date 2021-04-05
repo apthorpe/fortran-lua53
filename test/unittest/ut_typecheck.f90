@@ -115,7 +115,7 @@ program ut_typecheck
     call test%assertequal(nstack, 1, message="Expect 1 element (function, no args) before gv5 call")
 
     rc = lua_pcall(L=l, nargs=0, nresults=0, msgh=0)
-    call test%assertequal(rc, LUA_OK, message="Successful call (status is LUA_OK)")
+    call test%assertequal(rc, LUA_TH_OK, message="Successful call (status is LUA_TH_OK)")
 
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 0, message="Expect empty stack after gv5 test")
@@ -219,7 +219,7 @@ program ut_typecheck
     call test%assertequal(nstack, 2, message="Expect two values (function + arg) before gv12 call")
 
     rc = lua_pcall(L=l, nargs=1, nresults=2, msgh=0)
-    call test%assertequal(rc, LUA_OK, message="Successful call (status is LUA_OK)")
+    call test%assertequal(rc, LUA_TH_OK, message="Successful call (status is LUA_TH_OK)")
 
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 2, message="Expect two return values after gv12 call")

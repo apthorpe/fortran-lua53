@@ -64,7 +64,7 @@ program ut_fibonacci
         nresults = 2
 
         rc = lua_pcall(l, nargs, nresults, 0)
-        call test%assertequal(rc, LUA_OK, message="Successful call (status is LUA_OK)")
+        call test%assertequal(rc, LUA_TH_OK, message="Successful call (status is LUA_TH_OK)")
 
         r1 = lua_tointeger(l, -1)
         call test%assertequal(r1, 34_INT64, message="Successfully calculated fib prev (r1 = 34_INT64)")

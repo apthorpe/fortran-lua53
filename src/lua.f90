@@ -30,8 +30,6 @@
 !!   * lua_tocfunction
 !!   * lua_topointer
 !!   * lua_touserdata
-!!   * lua_yield
-!!   * lua_yieldk
 !!
 !! Auxiliary functions which are not inmplemented:
 !!
@@ -125,8 +123,6 @@ module lua
     !X lua_tocfunction - demonstrate need - partial support of C functions
     !X lua_topointer - demonstrate need - used mainly for hashing and debugging
     !X lua_touserdata - demonstrate need - uservalue/userdata beyond scope
-    !X lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
-    !X lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
 
     ! Debug Interface (not implemented)
 
@@ -305,9 +301,9 @@ module lua
     public :: lua_upvalueindex
     ! public :: lua_touserdata - demonstrate need - uservalue/userdata beyond scope
     public :: lua_version
-    ! public :: lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
-    ! public :: lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
-    ! public :: lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
+    public :: lua_xmove
+    public :: lua_yield
+    public :: lua_yieldk
 
     ! Debug interface functions
     ! public :: lua_gethook
@@ -387,7 +383,7 @@ module lua
 
     !!!@{
     !> Option for multiple returns in `lua_pcall()` and `lua_call()`.
-    integer(kind=c_int), parameter, public :: LUA_MULTRET = -1
+    integer(kind=c_int), parameter, public :: LUA_TH_MULTRET = -1
     !!!@}
 
     ! Basic types.
@@ -498,28 +494,42 @@ module lua
 
     !!!@{
     !> Thread status: (from `lua_pcall`) success, (from `lua_resume`)
-    !! indicates the coroutine finished its execution without errors
-    integer(kind=c_int), parameter, public :: LUA_OK        = 0
+    !! indicates the coroutine finished its execution without errors.
+    !! Renamed from `LUA_OK` to `LUA_TH_OK`
+    !! (function `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_OK        = 0
     !> Thread status: (from `lua_resume`) Indicates that the coroutine
     !! yields, (from `lua_status`) a thread is suspended
-    integer(kind=c_int), parameter, public :: LUA_YIELD     = 1
+    !! Renamed from `LUA_YIELD` to `LUA_TH_YIELD`
+    !! (function `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_YIELD     = 1
     !> Thread status: (from `pcall`) a runtime error
-    integer(kind=c_int), parameter, public :: LUA_ERRRUN    = 2
+    !! Renamed from `LUA_ERRRUN` to `LUA_TH_ERRRUN`
+    !! (function `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_ERRRUN    = 2
     !> Thread status: (from `lua_load`) syntax error during
     !! precompilation
-    integer(kind=c_int), parameter, public :: LUA_ERRSYNTAX = 3
+    !! Renamed from `LUA_ERRSYNTAX` to `LUA_TH_ERRSYNTAX`
+    !! (function `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_ERRSYNTAX = 3
     !> Thread status: (from `lua_pcall`, `lua_load`) memory allocation
     !! error. For such errors resulting from `lua_pcall`, Lua does not
     !! call the message handler.
-    integer(kind=c_int), parameter, public :: LUA_ERRMEM    = 4
+    !! Renamed from `LUA_ERRMEM` to `LUA_TH_ERRMEM`
+    !! (function `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_ERRMEM    = 4
     !> Thread status: (from `lua_pcall`) error while running a
     !! `__gc` metamethod. For such errors, Lua does not call the message
     !! handler (as this kind of error typically has no relation with the
     !! function being called).
-    integer(kind=c_int), parameter, public :: LUA_ERRGCMM   = 5
+    !! Renamed from `LUA_ERRGCMM` to `LUA_TH_ERRGCMM`
+    !! (function `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_ERRGCMM   = 5
     !> Thread status: (from `lua_pcall`) error while running the message
     !! handler
-    integer(kind=c_int), parameter, public :: LUA_ERRERR    = 6
+    !! Renamed from `LUA_ERRERR` to `LUA_TH_ERRERR` (function
+    !! `lua_yield()` name collides with `LUA_YIELD`)
+    integer(kind=c_int), parameter, public :: LUA_TH_ERRERR    = 6
     !!!@}
 
     !> @name `libc` function interface
@@ -923,10 +933,10 @@ module lua
         !! an error message.
         !!
         !! The return values of `lua_load` are:
-        !!   * `LUA_OK`: no errors;
-        !!   * `LUA_ERRSYNTAX`: syntax error during precompilation;
-        !!   * `LUA_ERRMEM`: memory allocation (out-of-memory) error;
-        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!   * `LUA_TH_OK`: no errors;
+        !!   * `LUA_TH_ERRSYNTAX`: syntax error during precompilation;
+        !!   * `LUA_TH_ERRMEM`: memory allocation (out-of-memory) error;
+        !!   * `LUA_TH_ERRGCMM`: error while running a `__gc` metamethod.
         !!     (This error has no relation with the chunk being loaded.
         !!     It is generated by the garbage collector.)
         !!
@@ -1063,7 +1073,7 @@ module lua
         !! the coroutine suspends or finishes its execution. When it
         !! returns, the stack contains all values passed to `lua_yield`,
         !! or all values returned by the body function. `lua_resume`
-        !! returns `LUA_YIELD` if the coroutine yields, `LUA_OK` if the
+        !! returns `LUA_TH_YIELD` if the coroutine yields, `LUA_TH_OK` if the
         !! coroutine finishes its execution without errors, or an error
         !! code in case of errors (see `lua_pcall`).
         !!
@@ -1166,13 +1176,13 @@ module lua
 
         !> @brief Returns the status of the thread `L`.
         !!
-        !! The status can be 0 (`LUA_OK`) for a normal thread, an error
+        !! The status can be 0 (`LUA_TH_OK`) for a normal thread, an error
         !! code if the thread finished the execution of a `lua_resume`
-        !! with an error, or `LUA_YIELD` if the thread is suspended.
+        !! with an error, or `LUA_TH_YIELD` if the thread is suspended.
         !!
-        !! You can only call functions in threads with status `LUA_OK`.
-        !! You can resume threads with status `LUA_OK` (to start a new
-        !! coroutine) or `LUA_YIELD` (to resume a coroutine).
+        !! You can only call functions in threads with status `LUA_TH_OK`.
+        !! You can resume threads with status `LUA_TH_OK` (to start a new
+        !! coroutine) or `LUA_TH_YIELD` (to resume a coroutine).
         !!
         !! C signature: `int lua_status(lua_State *L)`
         function lua_status(l) bind(c, name='lua_status')
@@ -1375,10 +1385,10 @@ module lua
         !! This function returns the same results as `lua_load`, but it
         !! has an extra error code `LUA_ERRFILE` for file-related errors
         !! (e.g., it cannot open or read the file). That is,
-        !!   * `LUA_OK`: no errors;
-        !!   * `LUA_ERRSYNTAX`: syntax error during precompilation;
-        !!   * `LUA_ERRMEM`: memory allocation (out-of-memory) error;
-        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!   * `LUA_TH_OK`: no errors;
+        !!   * `LUA_TH_ERRSYNTAX`: syntax error during precompilation;
+        !!   * `LUA_TH_ERRMEM`: memory allocation (out-of-memory) error;
+        !!   * `LUA_TH_ERRGCMM`: error while running a `__gc` metamethod.
         !!     (This error has no relation with the chunk being loaded.
         !!     It is generated by the garbage collector.)
         !!   * `LUA_ERRFILE`: file-related errors
@@ -1405,10 +1415,10 @@ module lua
         !! zero-terminated string `s`.
         !!
         !! This function returns the same results as `lua_load`. That is,
-        !!   * `LUA_OK`: no errors;
-        !!   * `LUA_ERRSYNTAX`: syntax error during precompilation;
-        !!   * `LUA_ERRMEM`: memory allocation (out-of-memory) error;
-        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!   * `LUA_TH_OK`: no errors;
+        !!   * `LUA_TH_ERRSYNTAX`: syntax error during precompilation;
+        !!   * `LUA_TH_ERRMEM`: memory allocation (out-of-memory) error;
+        !!   * `LUA_TH_ERRGCMM`: error while running a `__gc` metamethod.
         !!     (This error has no relation with the chunk being loaded.
         !!     It is generated by the garbage collector.)
         !!
@@ -1467,12 +1477,12 @@ module lua
         !!
         !! The `lua_pcallk` function returns one of the following
         !! constants (defined in `lua.h`):
-        !!   * `LUA_OK` (0): success.
-        !!   * `LUA_ERRRUN`: a runtime error.
-        !!   * `LUA_ERRMEM`: memory allocation error. For such errors,
+        !!   * `LUA_TH_OK` (0): success.
+        !!   * `LUA_TH_ERRRUN`: a runtime error.
+        !!   * `LUA_TH_ERRMEM`: memory allocation error. For such errors,
         !!     Lua does not call the message handler.
-        !!   * `LUA_ERRERR`: error while running the message handler.
-        !!   * `LUA_ERRGCMM`: error while running a `__gc` metamethod.
+        !!   * `LUA_TH_ERRERR`: error while running the message handler.
+        !!   * `LUA_TH_ERRGCMM`: error while running a `__gc` metamethod.
         !!     For such errors, Lua does not call the message handler
         !!     (as this kind of error typically has no relation with the
         !!     function being called).
@@ -1485,7 +1495,7 @@ module lua
             !> The number of arguments pushed onto the stack
             integer(kind=c_int),      intent(in), value :: nargs
             !> The maximum number of results to return unless
-            !! `nresults` is `LUA_MULTRET`
+            !! `nresults` is `LUA_TH_MULTRET`
             integer(kind=c_int),      intent(in), value :: nresults
             !> Stack index of the message handler
             integer(kind=c_int),      intent(in), value :: msgh
@@ -1613,7 +1623,7 @@ module lua
         !! the stack when the function is called. The function results
         !! are pushed onto the stack when the function returns. The
         !! number of results is adjusted to `nresults`, unless
-        !! `nresults` is `LUA_MULTRET`. In this case, all results from
+        !! `nresults` is `LUA_TH_MULTRET`. In this case, all results from
         !! the function are pushed; Lua takes care that the returned
         !! values fit into the stack space, but it does not ensure any
         !! extra space in the stack. The function results are pushed
@@ -2020,6 +2030,70 @@ module lua
             !> Number of arguments to move
             integer(kind=c_int),    intent(in), value :: n
         end subroutine lua_xmove
+
+        !> @brief  Yields a coroutine (thread) with no continuation.
+        !!
+        !! This function is equivalent to `lua_yieldk`, but it
+        !! has no continuation. Therefore, when the thread resumes, it
+        !! continues the function that called the function calling `lua_yield`.
+        !!
+        !! C signature: `int lua_yield (lua_State *L, int nresults)`
+        function lua_yield(l, nresults) bind(c, name='lua_yield')
+            import :: c_funptr, c_int, c_intptr_t, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),              intent(in), value :: l
+            !> Maximum number of results
+            integer(kind=c_int),      intent(in), value :: nresults
+            ! Return value
+            integer(kind=c_int)                         :: lua_yield
+        end function lua_yield
+
+        !> @brief  Yields a coroutine (thread).
+        !!
+        !! When a C function calls `lua_yieldk`, the running coroutine
+        !! suspends its execution, and the call to `lua_resume` that
+        !! started this coroutine returns. The parameter `nresults` is
+        !! the number of values from the stack that will be passed as
+        !! results to `lua_resume`.
+        !!
+        !! When the coroutine is resumed again, Lua calls the given
+        !! continuation function `k` to continue the execution of the
+        !! C function that yielded. This continuation function receives
+        !! the same stack from the previous function, with the `n`
+        !! results removed and replaced by the arguments passed to
+        !! `lua_resume`. Moreover, the continuation function receives
+        !! the value `ctx` that was passed to `lua_yieldk`.
+        !!
+        !! Usually, this function does not return; when the coroutine
+        !! eventually resumes, it continues executing the continuation
+        !! function. However, there is one special case, which is when
+        !! this function is called from inside a line or a count hook.
+        !! In that case, `lua_yieldk` should be called with no
+        !! continuation (probably in the form of `lua_yield`) and no
+        !! results, and the hook should return immediately after the
+        !! call. Lua will yield and, when the coroutine resumes again,
+        !! it will continue the normal execution of the (Lua) function
+        !! that triggered the hook.
+        !!
+        !! This function can raise an error if it is called from a
+        !! thread with a pending C call with no continuation function,
+        !! or it is called from a thread that is not running inside a
+        !! resume (e.g., the main thread).
+        !!
+        !! C signature: `int lua_yieldk (lua_State *L, int nresults, lua_KContext ctx, lua_KFunction k);`
+        function lua_yieldk(l, nresults, ctx, k) bind(c, name='lua_yieldk')
+            import :: c_funptr, c_int, c_intptr_t, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),              intent(in), value :: l
+            !> Maximum number of results
+            integer(kind=c_int),      intent(in), value :: nresults
+            !> The continuation-function context
+            integer(kind=c_intptr_t), intent(in), value :: ctx
+            !> Pointer to the continuation-function
+            type(c_funptr),           intent(in), value :: k
+            ! Return value
+            integer(kind=c_int)                         :: lua_yieldk
+        end function lua_yieldk
 
         ! Auxilliary library function
 
@@ -2583,7 +2657,7 @@ contains
         lual_dofile = lual_loadfile(l, fn)
 
         if (lual_dofile == 0) then
-            lual_dofile = lua_pcall(l, 0, LUA_MULTRET, 0)
+            lual_dofile = lua_pcall(l, 0, LUA_TH_MULTRET, 0)
         end if
 
         return
@@ -2606,7 +2680,7 @@ contains
 
         lual_dostring = luaL_loadstring(l, s)
         if (lual_dostring == 0) then
-            lual_dostring = lua_pcall(l, 0, LUA_MULTRET, 0)
+            lual_dostring = lua_pcall(l, 0, LUA_TH_MULTRET, 0)
         end if
 
         return
