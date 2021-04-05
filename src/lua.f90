@@ -17,7 +17,6 @@
 !!   * lua_getallocf
 !!   * lua_getextraspace
 !!   * lua_newstate
-!!   * lua_newthread
 !!   * lua_newuserdata
 !!   * lua_pushfstring
 !!   * lua_pushliteral
@@ -111,7 +110,6 @@ module lua
     !X lua_getallocf - demonstrate need - low-level memory management beyond scope
     !X lua_getextraspace - demonstrate need - low-level memory management beyond scope
     !o lua_newstate - use lual_newstate
-    !X lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
     !o lua_pushfstring - compose string with format() then use lua_pushstring
     !o lua_pushliteral - use lua_pushstring
@@ -245,7 +243,7 @@ module lua
     public :: lua_load
     ! public :: lua_newstate - use lual_newstate
     public :: lua_newtable
-    ! public :: lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
+    public :: lua_newthread
     ! public :: lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
     public :: lua_next
     public :: lua_numbertointeger
@@ -981,6 +979,26 @@ module lua
             ! Return value
             integer(kind=c_int)                       :: lua_load
         end function lua_load
+
+        !> @brief Creates a new thread, pushes it on the stack, and
+        !! returns a pointer to a `lua_State` that represents this new
+        !! thread.
+        !!
+        !! The new thread returned by this function shares with the
+        !! original thread its global environment, but has an
+        !! independent execution stack.
+        !!
+        !! There is no explicit function to close or to destroy a thread.
+        !! Threads are subject to garbage collection, like any Lua object.
+        !!
+        !! C signature: `lua_State *lua_newthread (lua_State *L)`
+        function lua_newthread(l) bind(c, name='lua_newthread')
+            import :: c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr), intent(in), value :: l
+            ! Return value
+            type(c_ptr)                    :: lua_newthread
+        end function lua_newthread
 
         !> @brief Pops a key from the stack, and pushes a key–value pair
         !! from the table at the given index (the "next" pair after the
