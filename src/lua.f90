@@ -16,7 +16,6 @@
 !!   * lua_dump
 !!   * lua_getallocf
 !!   * lua_getextraspace
-!!   * lua_getuservalue
 !!   * lua_newstate
 !!   * lua_newthread
 !!   * lua_newuserdata
@@ -113,7 +112,6 @@ module lua
     !* lua_dump
     !X lua_getallocf - demonstrate need - low-level memory management beyond scope
     !X lua_getextraspace - demonstrate need - low-level memory management beyond scope
-    !x lua_getuservalue - demonstrate need - uservalue/userdata beyond scope
     !o lua_newstate - use lual_newstate
     !X lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
@@ -194,7 +192,7 @@ module lua
     ! Implemented C API Functions
     public :: lua_absindex
     public :: lua_arith
-    ! lua_atpanic - demonstrate need - low-level process signalling beyond scope
+    ! public :: lua_atpanic - demonstrate need - low-level process signalling beyond scope
     public :: lua_call
     public :: lua_callk
     public :: lua_checkstack
@@ -203,18 +201,18 @@ module lua
     public :: lua_concat
     public :: lua_copy
     public :: lua_createtable
-    !* lua_dump
+    !* public :: lua_dump - demonstrate need; complex and requires C coding
     public :: lua_error
     public :: lua_gc
-    ! lua_getallocf - demonstrate need - low-level memory management beyond scope
-    ! lua_getextraspace - demonstrate need - low-level memory management beyond scope
+    ! public :: lua_getallocf - demonstrate need - low-level memory management beyond scope
+    ! public :: lua_getextraspace - demonstrate need - low-level memory management beyond scope
     public :: lua_getfield
     public :: lua_getglobal
     public :: lua_geti
     public :: lua_getmetatable
     public :: lua_gettable
     public :: lua_gettop
-    ! lua_getuservalue - demonstrate need - uservalue/userdata beyond scope
+    public :: lua_getuservalue
     public :: lua_insert
     public :: lua_isboolean
     public :: lua_iscfunction
@@ -231,10 +229,10 @@ module lua
     public :: lua_isyieldable
     public :: lua_len
     public :: lua_load
-    ! lua_newstate - use lual_newstate
+    ! public :: lua_newstate - use lual_newstate
     public :: lua_newtable
-    ! lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
-    ! lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
+    ! public :: lua_newthread - demonstrate need - coroutines and thread mgmt beyond scope
+    ! public :: lua_newuserdata - demonstrate need - uservalue/userdata beyond scope
     public :: lua_next
     public :: lua_numbertointeger
     public :: lua_pcall
@@ -242,56 +240,56 @@ module lua
     public :: lua_pop
     public :: lua_pushboolean
     public :: lua_pushcclosure
-    ! lua_pushfstring - compose string with format() then use lua_pushstring
+    ! public :: lua_pushfstring - compose string with format() then use lua_pushstring
     public :: lua_pushglobaltable
     public :: lua_pushinteger
     public :: lua_pushlightuserdata
-    ! lua_pushliteral - use lua_pushstring
+    ! public :: lua_pushliteral - use lua_pushstring
     public :: lua_pushlstring
     public :: lua_pushnil
     public :: lua_pushnumber
     public :: lua_pushstring
     public :: lua_pushthread
     public :: lua_pushvalue
-    ! lua_pushvfstring - compose string with format() then use lua_pushstring
+    ! public :: lua_pushvfstring - compose string with format() then use lua_pushstring
     public :: lua_rawequal
     public :: lua_rawget
     public :: lua_rawgeti
-    ! lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
+    ! public :: lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
     public :: lua_rawlen
     public :: lua_rawset
     public :: lua_rawseti
-    ! lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
+    ! public :: lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
     public :: lua_register
     public :: lua_replace
-    ! lua_resume - demonstrate need - coroutines and thread mgmt beyond scope
+    ! public :: lua_resume - demonstrate need - coroutines and thread mgmt beyond scope
     public :: lua_rotate
-    ! lua_setallocf - demonstrate need - low-level memory management beyond scope
+    ! public :: lua_setallocf - demonstrate need - low-level memory management beyond scope
     public :: lua_setfield
     public :: lua_setglobal
     public :: lua_seti
     public :: lua_setmetatable
     public :: lua_settable
     public :: lua_settop
-    ! lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
+    ! public :: lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
     public :: lua_status
     public :: lua_stringtonumber
     public :: lua_toboolean
-    ! lua_tocfunction - demonstrate need - partial support of C functions
+    ! public :: lua_tocfunction - demonstrate need - partial support of C functions
     public :: lua_tointeger
     public :: lua_tointegerx
     public :: lua_tonumber
     public :: lua_tonumberx
-    ! lua_topointer - demonstrate need - used mainly for hashing and debugging
+    ! public :: lua_topointer - demonstrate need - used mainly for hashing and debugging
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
     public :: lua_upvalueindex
-    ! lua_touserdata - demonstrate need - uservalue/userdata beyond scope
+    ! public :: lua_touserdata - demonstrate need - uservalue/userdata beyond scope
     public :: lua_version
-    ! lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
-    ! lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
-    ! lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
+    ! public :: lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
+    ! public :: lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
+    ! public :: lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
 
     ! Auxiliary Library functions
     ! luaL_addchar
@@ -640,6 +638,28 @@ module lua
             integer(kind=c_int)                       :: lua_getglobal_
         end function lua_getglobal_
 
+        ! !> @brief Returns a pointer to a raw memory area associated with
+        ! !! the given Lua state.
+        ! !!
+        ! !! The application can use this area for any purpose; Lua does
+        ! !! not use it for anything.
+        ! !!
+        ! !! Each new thread has this area initialized with a copy of the
+        ! !! area of the main thread.
+        ! !!
+        ! !! By default, this area has the size of a pointer to `void`,
+        ! !! but you can recompile Lua with a different size for this
+        ! !! area. (See `LUA_EXTRASPACE` in `luaconf.h`.)
+        ! !!
+        ! !! C signature: `void *lua_getextraspace (lua_State *L)'
+        ! function lua_getextraspace(l) bind(c, name='lua_getextraspace')
+        !     import :: c_ptr
+        !     !> Pointer to Lua interpreter state
+        !     type(c_ptr), intent(in), value :: l
+        !     ! Return value
+        !     type(c_ptr)                    :: lua_getextraspace
+        ! end function lua_getextraspace
+
         !> @brief Pushes onto the stack the value `t[k]`, where `t` is the
         !! value (table) at the given index. Returns the type of the pushed
         !! value (`t[k]`).
@@ -733,6 +753,22 @@ module lua
             ! Return value
             integer(kind=c_int)            :: lua_gettop
         end function lua_gettop
+
+        !> @brief Pushes onto the stack the Lua value associated with
+        !! the full userdata at the given index.
+        !!
+        !! Returns the type of the pushed value.
+        !!
+        !! C signature: `int lua_getuservalue (lua_State *L, int index)`
+        function lua_getuservalue(l, idx) bind(c, name='lua_getuservalue')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Index of userdata on stack
+            integer(kind=c_int), intent(in), value    :: idx
+            ! Return value
+            integer(kind=c_int)                       :: lua_getuservalue
+        end function lua_getuservalue
 
         !> @brief Moves the top element into the given valid index,
         !! shifting up the elements above this index to open space.
