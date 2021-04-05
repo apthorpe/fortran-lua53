@@ -7,7 +7,7 @@
 program ut_tablecheck
     use, intrinsic :: iso_fortran_env, only: WP => REAL64, INT64,       &
         stdout => OUTPUT_UNIT
-    use, intrinsic :: iso_c_binding, only: c_ptr
+    use, intrinsic :: iso_c_binding, only: c_ptr, c_null_char
     use :: lua
     use :: toast
     implicit none
@@ -25,6 +25,11 @@ program ut_tablecheck
     integer(kind=INT64) :: ival
     real(kind=WP) :: dval
     character(len=:), allocatable :: cval
+
+    integer :: table_idx
+    character(len=:), allocatable :: kk
+    character(len=:), allocatable :: vv
+    type(c_ptr) :: tmp_ptr
 
     type(TestCase) :: test
 
@@ -847,6 +852,58 @@ program ut_tablecheck
 
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 0, message="Expect empty stack after gv4b test")
+
+    ! Create a table
+
+    ! call lua_newtable(l) ! Can't find this during linking - macro?
+    call lua_createtable(l, 0, 0)
+    vv = lua_typename(l, lua_type(l, -1))
+    call test%assertequal(vv, "table", message="Expect table on top of stack")
+
+    ! Add first kv pair to stack
+    tmp_ptr = lua_pushstring(l, "Gate valve" // c_null_char)
+    call lua_setfield(l, -2, "Item")
+    ! Second...
+    call lua_pushinteger(l, 250)
+    call lua_setfield(l, -2, "Weight")
+    ! Third...
+    call lua_pushnumber(l, 379.95_WP)
+    call lua_setfield(l, -2, "Shipping")
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 1, message="Expect one element on stack (new table)")
+
+    table_idx = nstack
+
+    ! Walk the table
+    rc = 0
+    call lua_pushnil(l)
+    vv = lua_typename(l, lua_type(l, -1))
+    call test%assertequal(vv, "nil", message="Expect nil element on top of stack")
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 2, message="Expect two elements on stack (2->nil, 1->new table)")
+
+    ! Absolute index of key (nil) on stack is 2 <=== TOP
+    ! Absolute index of table on stack is 1
+
+    ! lua_next consumes a key every call.
+    do while (lua_next(l, table_idx) /= 0)
+      rc = rc + 1
+      ! Uses 'key' (at index -2) and 'value' (at index -1)
+      kk = lua_typename(l, lua_type(l, -2))
+      vv = lua_typename(l, lua_type(l, -1))
+      write(unit=stdout, fmt="(A, ' -> ', A)") kk, vv
+      ! removes 'value'; keeps 'key' for next iteration
+      call lua_pop(l, 1)
+    end do
+    call test%assertequal(rc, 3, message="Expect to walk three pairs in new table)")
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 1, message="Expect one element on stack (new table)")
+
+    ! Remove table
+    call lua_pop(l, 1)
 
     ! Close the interpreter
 
