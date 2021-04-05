@@ -1631,7 +1631,7 @@ module lua
         !! can use the function `lua_newtable`.
         !!
         !! C signature: `void lua_createtable(lua_State *L, int narr, int nrec)`
-        subroutine lua_createtable(l, narr, nrec) bind(c, name='lua_creatable')
+        subroutine lua_createtable(l, narr, nrec) bind(c, name='lua_createtable')
             import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
@@ -1727,15 +1727,16 @@ module lua
             type(c_ptr), intent(in), value :: l
         end subroutine lua_pushnil
 
-        !> @brief Pushes a float with value `n` onto the stack.
+        !> @brief Pushes a `lua_Number` (`c_double`) with value `n` onto
+        !! the stack.
         !!
         !! C signature: `void lua_pushnumber(lua_State *L, lua_Number n)`
         subroutine lua_pushnumber(l, n) bind(c, name='lua_pushnumber')
-            import :: c_float, c_ptr
+            import :: c_double, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),        intent(in), value :: l
             !> Float to push onto the stack
-            real(kind=c_float), intent(in), value :: n
+            real(kind=c_double), intent(in), value :: n
         end subroutine lua_pushnumber
 
         !> @brief Pushes a copy of the element at the given index onto the stack.
