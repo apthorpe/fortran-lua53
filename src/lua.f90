@@ -94,6 +94,8 @@ module lua
     implicit none
     private
 
+    ! C API
+
     ! Unmplemented C API Types (* considered important)
     ! lua_Alloc
     ! lua_CFunction - represented as c_funptr
@@ -129,7 +131,27 @@ module lua
     !X lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
 
-    ! The Lua debug interface is not supported
+    ! Debug Interface (not implemented)
+
+    ! Unimplemented Debug types
+    !X lua_Debug
+    !X lua_Hook
+
+    ! Unimplemented Debug functions
+    !X lua_gethook
+    !X lua_gethookcount
+    !X lua_gethookmask
+    !X lua_getinfo
+    !X lua_getlocal
+    !X lua_getstack
+    !X lua_getupvalue
+    !X lua_sethook
+    !X lua_setlocal
+    !X lua_setupvalue
+    !X lua_upvalueid
+    !X lua_upvaluejoin
+
+    ! Auxiliary Library
 
     ! Unimplemented Auxiliary Library types
     ! luaL_Buffer
@@ -289,6 +311,20 @@ module lua
     ! public :: lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
     ! public :: lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
     ! public :: lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
+
+    ! Debug interface functions
+    ! public :: lua_gethook
+    ! public :: lua_gethookcount
+    ! public :: lua_gethookmask
+    ! public :: lua_getinfo
+    ! public :: lua_getlocal
+    ! public :: lua_getstack
+    ! public :: lua_getupvalue
+    ! public :: lua_sethook
+    ! public :: lua_setlocal
+    ! public :: lua_setupvalue
+    ! public :: lua_upvalueid
+    ! public :: lua_upvaluejoin
 
     ! Auxiliary Library functions
     ! luaL_addchar
