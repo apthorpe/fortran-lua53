@@ -121,7 +121,6 @@ module lua
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
     !X lua_rawgetp - demonstrate need - uservalue/userdata beyond scope
     !X lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
-    !X lua_resume - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_setallocf - demonstrate need - low-level memory management beyond scope
     !X lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
     !X lua_tocfunction - demonstrate need - partial support of C functions
@@ -283,7 +282,7 @@ module lua
     ! public :: lua_rawsetp - demonstrate need - uservalue/userdata beyond scope
     public :: lua_register
     public :: lua_replace
-    ! public :: lua_resume - demonstrate need - coroutines and thread mgmt beyond scope
+    public :: lua_resume
     public :: lua_rotate
     ! public :: lua_setallocf - demonstrate need - low-level memory management beyond scope
     public :: lua_setfield
@@ -1056,6 +1055,45 @@ module lua
             ! Return value
             integer(kind=c_int)                          :: lua_numbertointeger
         end function lua_numbertointeger
+
+
+        !> @brief  Starts and resumes a coroutine in the given thread `L`.
+        !!
+        !! To start a coroutine, you push onto the thread stack the main
+        !! function plus any arguments; then you call `lua_resume`, with
+        !! `nargs` being the number of arguments. This call returns when
+        !! the coroutine suspends or finishes its execution. When it
+        !! returns, the stack contains all values passed to `lua_yield`,
+        !! or all values returned by the body function. `lua_resume`
+        !! returns `LUA_YIELD` if the coroutine yields, `LUA_OK` if the
+        !! coroutine finishes its execution without errors, or an error
+        !! code in case of errors (see `lua_pcall`).
+        !!
+        !! In case of errors, the stack is not unwound, so you can use
+        !! the debug API over it. The error object is on the top of the
+        !! stack.
+        !!
+        !! To resume a coroutine, you remove any results from the last
+        !! `lua_yield`, put on its stack only the values to be passed as
+        !! results from `yield`, and then call `lua_resume`.
+        !!
+        !! The parameter `from` represents the coroutine that is
+        !! resuming `L`. If there is no such coroutine, this parameter
+        !! can be `NULL`.
+        !!
+        !! C signature: `int lua_resume (lua_State *L, lua_State *from, int nargs)`
+        function lua_resume(l, from, nargs) bind(c, name='lua_resume')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),            intent(in), value :: l
+            !> Pointer to coroutine (may be NULL)
+            type(c_ptr),            intent(in), value :: from
+            !> Index of table
+            integer(kind=c_int),    intent(in), value :: nargs
+
+            ! Return value
+            integer(kind=c_int)                       :: lua_resume
+        end function lua_resume
 
         !> @brief Does the equivalent to `t[k] = v`, where `t` is the
         !! value (table) at the given index and `v` is the value at the
