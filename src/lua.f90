@@ -30,7 +30,6 @@
 !!   * lua_tocfunction
 !!   * lua_topointer
 !!   * lua_touserdata
-!!   * lua_xmove
 !!   * lua_yield
 !!   * lua_yieldk
 !!
@@ -126,7 +125,6 @@ module lua
     !X lua_tocfunction - demonstrate need - partial support of C functions
     !X lua_topointer - demonstrate need - used mainly for hashing and debugging
     !X lua_touserdata - demonstrate need - uservalue/userdata beyond scope
-    !X lua_xmove - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_yield - demonstrate need - coroutines and thread mgmt beyond scope
     !X lua_yieldk - demonstrate need - coroutines and thread mgmt beyond scope
 
@@ -2005,6 +2003,23 @@ module lua
             ! real(kind=c_double)                    :: lua_version
             type(c_ptr)                            :: lua_version_
         end function lua_version_
+
+        !> @brief Exchange values between different threads of the same
+        !! state.
+        !!
+        !! This function pops `n` values from the stack `from`, and
+        !! pushes them onto the stack `to`.
+        !!
+        !! C signature: `void lua_xmove (lua_State *from, lua_State *to, int n)`
+        subroutine lua_xmove(from, to, n) bind(c, name='lua_xmove')
+            import :: c_int, c_ptr
+            !> Pointer to source stack
+            type(c_ptr),            intent(in), value :: from
+            !> Pointer to destination stack
+            type(c_ptr),            intent(in), value :: to
+            !> Number of arguments to move
+            integer(kind=c_int),    intent(in), value :: n
+        end subroutine lua_xmove
 
         ! Auxilliary library function
 
