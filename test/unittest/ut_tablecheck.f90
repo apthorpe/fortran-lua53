@@ -855,7 +855,14 @@ program ut_tablecheck
 
     ! Create a table
 
-    ! call lua_newtable(l) ! Can't find this during linking - macro?
+    call lua_newtable(l)
+
+    ! Throw it away
+
+    call lua_pop(l, 1)
+
+    ! Create another table
+
     call lua_createtable(l, 0, 0)
     vv = lua_typename(l, lua_type(l, -1))
     call test%assertequal(vv, "table", message="Expect table on top of stack")

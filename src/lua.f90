@@ -1643,17 +1643,6 @@ module lua
             integer(kind=c_int), intent(in), value :: nrec
         end subroutine lua_createtable
 
-        !> @brief Creates a new empty table and pushes it onto the stack.
-        !!
-        !! `lua_newtable(L)` is equivalent to `lua_createtable(L, 0, 0)`.
-        !!
-        !! C signature: `void lua_newtable(lua_State *L)`
-        subroutine lua_newtable(l) bind(c, name='lua_newtable')
-            import :: c_ptr
-            !> Pointer to Lua interpreter state
-            type(c_ptr), intent(in), value :: l
-        end subroutine lua_newtable
-
         !> @brief Pushes a boolean value with value `b` onto the stack.
         !!
         !! C signature: `void lua_pushboolean(lua_State *L, int b)`
@@ -2262,6 +2251,21 @@ contains
 
         return
     end function lua_isyieldable
+
+    !> @brief Creates a new empty table and pushes it onto the stack.
+    !!
+    !! `lua_newtable(L)` is equivalent to `lua_createtable(L, 0, 0)`.
+    !!
+    !! C signature: `void lua_newtable(lua_State *L)`
+    subroutine lua_newtable(l)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        continue
+
+        call lua_createtable(l, 0, 0)
+
+        return
+    end subroutine lua_newtable
 
     !> @brief Macro replacement that calls `lua_pcallk()`.
     !!
