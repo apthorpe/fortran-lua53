@@ -34,7 +34,6 @@
 !!  * luaL_buffinit
 !!  * luaL_buffinitsize
 !!  * luaL_callmeta
-!!  * luaL_checknumber
 !!  * luaL_checkoption
 !!  * luaL_checkstack
 !!  * luaL_checktype
@@ -141,7 +140,6 @@ module lua
     ! luaL_buffinit - buffer operation
     ! luaL_buffinitsize - buffer operation
     ! luaL_callmeta
-    ! luaL_checknumber
     ! luaL_checkoption
     ! luaL_checkstack
     ! luaL_checktype
@@ -326,7 +324,7 @@ module lua
     public :: luaL_checkany
     public :: luaL_checkinteger
     public :: luaL_checklstring
-    ! luaL_checknumber
+    public :: luaL_checknumber
     ! luaL_checkoption
     ! luaL_checkstack
     public :: luaL_checkstring
@@ -2316,17 +2314,31 @@ module lua
         !! `lual_checklstring` or `lual_checkstring` instead.
         !!
         !! C signature: `const char *luaL_checklstring (lua_State *L, int arg, size_t *l)`
-        function lual_checklstring_(l, idx, len) bind(c, name='luaL_checklstring')
+        function lual_checklstring_(l, arg, len) bind(c, name='luaL_checklstring')
             import :: c_int, c_ptr, c_size_t
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of element to convert
-            integer(kind=c_int), intent(in), value :: idx
+            integer(kind=c_int), intent(in), value :: arg
             !> String length
             integer(kind=c_size_t), intent(inout)  :: len
             ! Return value
             type(c_ptr)                            :: lual_checklstring_
         end function lual_checklstring_
+
+        !> @brief Checks whether the function argument `arg` is a number
+        !! and returns this number.
+        !!
+        !! C signature: `lua_Number luaL_checknumber (lua_State *L, int arg)`
+        function lual_checknumber_(l, arg) bind(c, name='luaL_checknumber')
+            import :: c_int, c_ptr, c_double
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of function argument to check
+            integer(kind=c_int), intent(in), value :: arg
+            ! Return value
+            real(kind=c_double)                    :: lual_checknumber_
+        end function lual_checknumber_
 
         !> @brief Opens all standard Lua libraries into the given state.
         !!
@@ -2982,6 +2994,32 @@ contains
 
         return
     end function lual_checklstring
+
+    !> @brief Checks whether the function argument `arg` is a number
+    !! and returns this number.
+    !!
+    !! @note This function takes and returns Fortran arguments,
+    !! performing C type coversion before and after calling;
+    !! the wrapper function `lual_checknumber_`
+    !!
+    !! C signature: `lua_Number luaL_checknumber (lua_State *L, int arg)`
+    function lual_checknumber(l, arg)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of function argument to check
+        integer,     intent(in) :: arg
+
+        ! Return value
+        real(kind=REAL64)       :: lual_checknumber
+        integer(kind=c_int)     :: iarg
+
+        continue
+
+        iarg = int(arg, kind=c_int)
+        lual_checknumber = real(lual_checknumber_(l, iarg), kind=REAL64)
+
+        return
+    end function lual_checknumber
 
     !> @brief Checks whether the function argument `arg` is a string
     !! and returns this string.
