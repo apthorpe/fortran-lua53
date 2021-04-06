@@ -20,12 +20,7 @@
 !!   * lua_pushfstring
 !!   * lua_pushliteral
 !!   * lua_pushvfstring
-!!   * lua_resume
 !!   * lua_setallocf
-!!   * lua_setuservalue
-!!   * lua_tocfunction
-!!   * lua_topointer
-!!   * lua_touserdata
 !!
 !! Auxiliary functions which are not inmplemented:
 !!
@@ -111,10 +106,6 @@ module lua
     !o lua_pushliteral - use lua_pushstring
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
     !X lua_setallocf - demonstrate need - low-level memory management beyond scope
-    !X lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
-    !X lua_tocfunction - demonstrate need - partial support of C functions
-    !X lua_topointer - demonstrate need - used mainly for hashing and debugging
-    !X lua_touserdata - demonstrate need - uservalue/userdata beyond scope
 
     ! Debug Interface (not implemented)
 
@@ -277,21 +268,21 @@ module lua
     public :: lua_setmetatable
     public :: lua_settable
     public :: lua_settop
-    ! public :: lua_setuservalue - demonstrate need - uservalue/userdata beyond scope
+    public :: lua_setuservalue
     public :: lua_status
     public :: lua_stringtonumber
     public :: lua_toboolean
-    ! public :: lua_tocfunction - demonstrate need - partial support of C functions
+    public :: lua_tocfunction
     public :: lua_tointeger
     public :: lua_tointegerx
     public :: lua_tonumber
     public :: lua_tonumberx
-    ! public :: lua_topointer - demonstrate need - used mainly for hashing and debugging
+    public :: lua_topointer
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
     public :: lua_upvalueindex
-    ! public :: lua_touserdata - demonstrate need - uservalue/userdata beyond scope
+    public :: lua_touserdata
     public :: lua_version
     public :: lua_xmove
     public :: lua_yield
@@ -1271,6 +1262,20 @@ module lua
             integer(kind=c_int)                    :: lua_toboolean_
         end function lua_toboolean_
 
+        !> @brief Converts a value at the given index to a C function.
+        !! That value must be a C function; otherwise, returns `NULL`.
+        !!
+        !! C signature: `lua_CFunction lua_tocfunction (lua_State *L, int index)`
+        function lua_tocfunction(l, idx) bind(c, name='lua_tocfunction')
+            import :: c_int, c_ptr, c_funptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of entry to convert
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            type(c_funptr)                         :: lua_tocfunction
+        end function lua_tocfunction
+
         !> @brief Converts the Lua value at the given index to the
         !! signed integral type `lua_Integer`.
         !!
@@ -1314,6 +1319,45 @@ module lua
             ! Return value
             real(kind=c_double)                    :: lua_tonumberx
         end function lua_tonumberx
+
+        !> @brief Converts the value at the given index to a generic C
+        !! pointer (`void*`).
+        !!
+        !! The value can be a userdata, a table, a thread, or a
+        !! function; otherwise, `lua_topointer` returns `NULL`.
+        !! Different objects will give different pointers. There is no
+        !! way to convert the pointer back to its original value.
+        !!
+        !! Typically this function is used only for hashing and debug
+        !! information.
+        !!
+        !! C signature: `const void *lua_topointer (lua_State *L, int index)`
+        function lua_topointer(l, idx) bind(c, name='lua_topointer')
+            import :: c_int, c_ptr, c_double
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of entry to convert
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            type(c_ptr)                            :: lua_topointer
+        end function lua_topointer
+
+        !> @brief If the value at the given index is a full userdata,
+        !! returns its block address. If the value is a light userdata,
+        !! returns its pointer. Otherwise, returns `NULL`.
+        !!
+        !! C signature: `void *lua_touserdata (lua_State *L, int index)`
+        function lua_touserdata(l, idx) bind(c, name='lua_touserdata')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element to test
+            integer(kind=c_int), intent(in), value :: idx
+            ! Return value
+            type(c_ptr)                            :: lua_touserdata
+        end function lua_touserdata
+
+
 
         !> @brief Converts the Lua value at the given index to a C
         !! string.
@@ -2064,6 +2108,18 @@ module lua
             !> Index to set as top of the stack
             integer(kind=c_int), intent(in), value :: idx
         end subroutine lua_settop
+
+        !> @brief Pops a value from the stack and sets it as the new
+        !! value associated to the full userdata at the given index.
+        !!
+        !! C signature: `void lua_setuservalue (lua_State *L, int index)`
+        subroutine lua_setuservalue(l, idx) bind(c, name='lua_setuservalue')
+            import :: c_int, c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index to set as top of the stack
+            integer(kind=c_int), intent(in), value :: idx
+        end subroutine lua_setuservalue
 
         !> @brief Returns the address of the version number (a C static
         !! variable) stored in the Lua core.
