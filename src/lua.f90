@@ -192,6 +192,14 @@ module lua
     ! #define luaL_opt(L,f,n,d)    (lua_isnoneornil(L,(n)) ? (d) : f(L,(n)))
     ! #define luaL_loadbuffer(L,s,sz,n)    luaL_loadbufferx(L,s,sz,n,NULL)
 
+    ! Equivalent 'kinds' of Lua values
+
+    !> Fortran integer `kind` mapping to lua_Integer
+    integer, parameter, public :: c_lua_integer = c_long_long
+
+    !> Fortran real `kind` mapping to lua_Number
+    integer, parameter, public :: c_lua_number = c_double
+
     ! Implemented C API Functions
     public :: lua_absindex
     public :: lua_arith
@@ -722,13 +730,13 @@ module lua
         !!
         !! C signature: `int lua_geti (lua_State *L, int index, lua_Integer i)`
         function lua_geti(l, idx, i) bind(c, name='lua_geti')
-            import :: c_int, c_ptr, c_long_long
+            import :: c_int, c_ptr, c_lua_integer
             !> Pointer to Lua interpreter state
             type(c_ptr),               intent(in), value :: l
             !> Index of table on stack
             integer(kind=c_int),       intent(in), value :: idx
             !> Index of value in table
-            integer(kind=c_long_long), intent(in), value :: i
+            integer(kind=c_lua_integer), intent(in), value :: i
             ! Return value
             integer(kind=c_int)                          :: lua_geti
         end function lua_geti
@@ -1081,12 +1089,12 @@ module lua
         !!
         !! C signature: `int lua_numbertointeger (lua_Number n, lua_Integer *p)`
         function lua_numbertointeger(n, i) bind(c, name='lua_numbertointeger')
-            import :: c_int, c_double, c_long_long
+            import :: c_int, c_lua_number, c_lua_integer
             !> Pointer to Lua interpreter state
-            real(kind=c_double),       intent(in), value :: n
+            real(kind=c_lua_number),       intent(in), value :: n
             !> Index of previous key extracted from table; set to `nil`
             !! to extract first key
-            integer(kind=c_long_long), intent(in)        :: i
+            integer(kind=c_lua_integer), intent(in)        :: i
             ! Return value
             integer(kind=c_int)                          :: lua_numbertointeger
         end function lua_numbertointeger
@@ -1163,13 +1171,13 @@ module lua
         !!
         !! C signature: `void lua_seti (lua_State *L, int index, lua_Integer n)`
         subroutine lua_seti(l, idx, n) bind(c, name='lua_seti')
-            import :: c_int, c_ptr, c_long_long
+            import :: c_int, c_ptr, c_lua_integer
             !> Pointer to Lua interpreter state
             type(c_ptr),             intent(in), value :: l
             !> Index of table on stack
             integer(kind=c_int), intent(in), value     :: idx
             !> Index of value in table
-            integer(kind=c_long_long), intent(in), value :: n
+            integer(kind=c_lua_integer), intent(in), value :: n
         end subroutine lua_seti
 
         !> @brief Pops a table from the stack and sets it as the new
@@ -1294,7 +1302,7 @@ module lua
         !!
         !! C signature: `lua_Integer lua_tointegerx(lua_State *L, int idx, int *isnum)`
         function lua_tointegerx(l, idx, isnum) bind(c, name='lua_tointegerx')
-            import :: c_int, c_ptr, c_long_long
+            import :: c_int, c_ptr, c_lua_integer
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of entry to convert
@@ -1302,7 +1310,7 @@ module lua
             !> Operation success flag
             type(c_ptr),         intent(in), value :: isnum
             ! Return value
-            integer(kind=c_long_long)              :: lua_tointegerx
+            integer(kind=c_lua_integer)              :: lua_tointegerx
         end function lua_tointegerx
 
         !> @brief Converts the Lua value at the given index to the C type `lua_Number`.
@@ -1315,7 +1323,7 @@ module lua
         !!
         !! C signature: `lua_Number lua_tonumberx (lua_State *L, int index, int *isnum);`
         function lua_tonumberx(l, idx, isnum) bind(c, name='lua_tonumberx')
-            import :: c_int, c_ptr, c_double
+            import :: c_int, c_ptr, c_lua_number
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of entry to convert
@@ -1323,7 +1331,7 @@ module lua
             !> Operation success flag
             type(c_ptr),         intent(in), value :: isnum
             ! Return value
-            real(kind=c_double)                    :: lua_tonumberx
+            real(kind=c_lua_number)                    :: lua_tonumberx
         end function lua_tonumberx
 
         !> @brief Converts the value at the given index to a generic C
@@ -1339,7 +1347,7 @@ module lua
         !!
         !! C signature: `const void *lua_topointer (lua_State *L, int index)`
         function lua_topointer(l, idx) bind(c, name='lua_topointer')
-            import :: c_int, c_ptr, c_double
+            import :: c_int, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of entry to convert
@@ -1843,11 +1851,11 @@ module lua
         !!
         !! C signature: `void lua_pushinteger(lua_State *L, lua_Integer n)`
         subroutine lua_pushinteger(l, n) bind(c, name='lua_pushinteger')
-            import :: c_long_long, c_ptr
+            import :: c_lua_integer, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Integer value to push onto the stack
-            integer(kind=c_long_long), intent(in), value :: n
+            integer(kind=c_lua_integer), intent(in), value :: n
         end subroutine lua_pushinteger
 
         !> @brief Pushes a light userdata onto the stack.
@@ -1882,11 +1890,11 @@ module lua
         !!
         !! C signature: `void lua_pushnumber(lua_State *L, lua_Number n)`
         subroutine lua_pushnumber(l, n) bind(c, name='lua_pushnumber')
-            import :: c_double, c_ptr
+            import :: c_lua_number, c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),        intent(in), value :: l
             !> Float to push onto the stack
-            real(kind=c_double), intent(in), value :: n
+            real(kind=c_lua_number), intent(in), value :: n
         end subroutine lua_pushnumber
 
         !> @brief Pushes a copy of the element at the given index onto the stack.
@@ -1949,13 +1957,13 @@ module lua
         !!
         !! C signature: `int lua_rawgeti (lua_State *L, int index, lua_Integer n)`
         function lua_rawgeti(l, idx, n) bind(c, name='lua_rawgeti')
-            import :: c_int, c_ptr, c_long_long
+            import :: c_int, c_ptr, c_lua_integer
             !> Pointer to Lua interpreter state
             type(c_ptr),             intent(in), value :: l
             !> Index of table on stack
             integer(kind=c_int), intent(in), value     :: idx
             !> Index of value in table
-            integer(kind=c_long_long), intent(in), value :: n
+            integer(kind=c_lua_integer), intent(in), value :: n
             ! Return value
             integer(kind=c_int)                        :: lua_rawgeti
         end function lua_rawgeti
@@ -2024,13 +2032,13 @@ module lua
         !!
         !! C signature: `void lua_rawseti (lua_State *L, int index, lua_Integer i)`
         subroutine lua_rawseti(l, idx, i) bind(c, name='lua_rawseti')
-            import :: c_int, c_ptr, c_long_long
+            import :: c_int, c_ptr, c_lua_integer
             !> Pointer to Lua interpreter state
             type(c_ptr),               intent(in), value :: l
             !> Index of table on stack
             integer(kind=c_int),       intent(in), value :: idx
             !> Index of value in table
-            integer(kind=c_long_long), intent(in), value :: i
+            integer(kind=c_lua_integer), intent(in), value :: i
         end subroutine lua_rawseti
 
         !> @brief Does the equivalent of `t[p] = v`, where `t` is the
@@ -2136,11 +2144,10 @@ module lua
         !!
         !! C signature: `const lua_Number *lua_version (lua_State *L)`
         function lua_version_(l) bind(c, name='lua_version')
-            import :: c_ptr, c_double
+            import :: c_ptr
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             ! Return value
-            ! real(kind=c_double)                    :: lua_version
             type(c_ptr)                            :: lua_version_
         end function lua_version_
 
@@ -2290,14 +2297,14 @@ module lua
         !!
         !! C signature: `lua_Integer luaL_checkinteger (lua_State *L, int arg)`
         function lual_checkinteger(l, arg) bind(c, name='luaL_checkinteger')
-            import :: c_ptr, c_int, c_long_long
+            import :: c_ptr, c_int, c_lua_integer
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Called function argument position
             integer(kind=c_int), intent(in), value :: arg
 
             ! Called function argument position
-            integer(kind=c_long_long)              :: lual_checkinteger
+            integer(kind=c_lua_integer)              :: lual_checkinteger
         end function lual_checkinteger
 
         !> @brief Checks whether the function argument `arg` is a string
@@ -2329,13 +2336,13 @@ module lua
         !!
         !! C signature: `lua_Number luaL_checknumber (lua_State *L, int arg)`
         function lual_checknumber_(l, arg) bind(c, name='luaL_checknumber')
-            import :: c_int, c_ptr, c_double
+            import :: c_int, c_ptr, c_lua_number
             !> Pointer to Lua interpreter state
             type(c_ptr),         intent(in), value :: l
             !> Index of function argument to check
             integer(kind=c_int), intent(in), value :: arg
             ! Return value
-            real(kind=c_double)                    :: lual_checknumber_
+            real(kind=c_lua_number)                    :: lual_checknumber_
         end function lual_checknumber_
 
         !> @brief Checks whether the core running the call, the core
@@ -2688,7 +2695,7 @@ contains
     !!
     !! C signature: `int lua_pcall(lua_State *L, int nargs, int nresults, int msgh)`
     !!
-    !! @note Continuation-function context is hard-coded to `0_c_long_long`
+    !! @note Continuation-function context is hard-coded to `0_c_lua_integer`
     !! (64-bit integer) which may cause problems if `LUA_INTEGER` is
     !! defined to anything other than `long long` in `luaconf.h`
     function lua_pcall(l, nargs, nresults, msgh)
@@ -2706,7 +2713,7 @@ contains
         continue
 
         ! lua_pcall = lua_pcallk(l, nargs, nresults, msgh, int(0, kind=8), c_null_ptr)
-        lua_pcall = lua_pcallk(l, nargs, nresults, msgh, 0_c_long_long, c_null_ptr)
+        lua_pcall = lua_pcallk(l, nargs, nresults, msgh, 0_c_lua_integer, c_null_ptr)
 
         return
     end function lua_pcall
@@ -3178,7 +3185,7 @@ contains
     !!
     !! C signature: `void lua_call(lua_State *L, int nargs, int nresults)`
     !!
-    !! @note Continuation-function context is hard-coded to `0_c_long_long`
+    !! @note Continuation-function context is hard-coded to `0_c_lua_integer`
     !! (64-bit integer) which may cause problems if `LUA_INTEGER` is
     !! defined to anything other than `__int64` in `luaconf.h`
     subroutine lua_call(l, nargs, nresults)
@@ -3191,7 +3198,7 @@ contains
         continue
 
         ! call lua_callk(l, nargs, nresults, int(0, kind=8), c_null_ptr)
-        call lua_callk(l, nargs, nresults, 0_c_long_long, c_null_ptr)
+        call lua_callk(l, nargs, nresults, 0_c_lua_integer, c_null_ptr)
 
         return
     end subroutine lua_call
@@ -3324,7 +3331,7 @@ contains
         !> Fortran string
         real(kind=REAL64), intent(out)         :: f_real
 
-        real(kind=c_double), pointer           :: ptr_to_real
+        real(kind=c_lua_number), pointer       :: ptr_to_real
         continue
 
         f_real = 0.0_REAL64
