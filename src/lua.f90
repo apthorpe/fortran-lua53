@@ -3003,11 +3003,10 @@ contains
     !!
     !! C signature: `void lua_call(lua_State *L, int nargs, int nresults)`
     !!
-    !! @note Continuation-function context is hard-coded to `0_INT64`
+    !! @note Continuation-function context is hard-coded to `0_c_long_long`
     !! (64-bit integer) which may cause problems if `LUA_INTEGER` is
     !! defined to anything other than `__int64` in `luaconf.h`
     subroutine lua_call(l, nargs, nresults)
-        use, intrinsic :: iso_fortran_env, only: INT64
         !> Pointer to Lua interpreter state
         type(c_ptr), intent(in) :: l
         !> Number of arguments
@@ -3017,7 +3016,7 @@ contains
         continue
 
         ! call lua_callk(l, nargs, nresults, int(0, kind=8), c_null_ptr)
-        call lua_callk(l, nargs, nresults, 0_INT64, c_null_ptr)
+        call lua_callk(l, nargs, nresults, 0_c_long_long, c_null_ptr)
 
         return
     end subroutine lua_call
