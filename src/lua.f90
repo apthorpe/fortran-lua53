@@ -38,7 +38,6 @@
 !!  * luaL_checkstack
 !!  * luaL_checktype
 !!  * luaL_checkudata
-!!  * luaL_checkversion
 !!  * luaL_error
 !!  * luaL_execresult
 !!  * luaL_fileresult
@@ -144,7 +143,6 @@ module lua
     ! luaL_checkstack
     ! luaL_checktype
     ! luaL_checkudata
-    ! luaL_checkversion
     ! luaL_error
     ! luaL_execresult
     ! luaL_fileresult
@@ -330,7 +328,7 @@ module lua
     public :: luaL_checkstring
     ! luaL_checktype
     ! luaL_checkudata
-    ! luaL_checkversion
+    public :: luaL_checkversion
     public :: lual_dofile
     public :: lual_dostring
     ! luaL_error
@@ -2339,6 +2337,19 @@ module lua
             ! Return value
             real(kind=c_double)                    :: lual_checknumber_
         end function lual_checknumber_
+
+        !> @brief Checks whether the core running the call, the core
+        !! that created the Lua state, and the code making the call are
+        !! all using the same version of Lua. Also checks whether the
+        !! core running the call and the core that created the Lua state
+        !! are using the same address space.
+        !!
+        !! C signature: `void luaL_checkversion (lua_State *L)`
+        subroutine lual_checkversion(l) bind(c, name='luaL_checkversion')
+            import :: c_ptr
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+        end subroutine lual_checkversion
 
         !> @brief Opens all standard Lua libraries into the given state.
         !!
