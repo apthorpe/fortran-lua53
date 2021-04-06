@@ -34,13 +34,9 @@
 !!  * luaL_buffinit
 !!  * luaL_buffinitsize
 !!  * luaL_callmeta
-!!  * luaL_checkany
-!!  * luaL_checkinteger
-!!  * luaL_checklstring
 !!  * luaL_checknumber
 !!  * luaL_checkoption
 !!  * luaL_checkstack
-!!  * luaL_checkstring
 !!  * luaL_checktype
 !!  * luaL_checkudata
 !!  * luaL_checkversion
@@ -135,23 +131,19 @@ module lua
     ! luaL_Stream
 
     ! Unimplemented Auxiliary Library functions (* considered important)
-    ! luaL_addchar
-    ! luaL_addlstring
-    ! luaL_addsize
-    ! luaL_addstring
-    ! luaL_addvalue
-    ! luaL_argcheck - error linking to C API function luaL_argerror - extern?
+    ! luaL_addchar - buffer operation
+    ! luaL_addlstring - buffer operation
+    ! luaL_addsize - buffer operation
+    ! luaL_addstring - buffer operation
+    ! luaL_addvalue - buffer operation
+    !M luaL_argcheck - error linking to C API function luaL_argerror - extern?
     ! luaL_argerror - error linking to C API function luaL_argerror - extern?
-    ! luaL_buffinit
-    ! luaL_buffinitsize
+    ! luaL_buffinit - buffer operation
+    ! luaL_buffinitsize - buffer operation
     ! luaL_callmeta
-    ! luaL_checkany
-    ! luaL_checkinteger
-    ! luaL_checklstring
     ! luaL_checknumber
     ! luaL_checkoption
     ! luaL_checkstack
-    ! luaL_checkstring
     ! luaL_checktype
     ! luaL_checkudata
     ! luaL_checkversion
@@ -159,19 +151,19 @@ module lua
     ! luaL_execresult
     ! luaL_fileresult
     ! luaL_getmetafield
-    ! luaL_getmetatable
+    !M luaL_getmetatable
     ! luaL_getsubtable
     ! luaL_gsub
-    ! luaL_loadbuffer
+    !M luaL_loadbuffer
     ! luaL_loadbufferx
-    ! luaL_newlib
-    ! luaL_newlibtable
+    !M luaL_newlib
+    !M luaL_newlibtable
     ! luaL_newmetatable
-    ! luaL_opt
+    !M luaL_opt
     ! luaL_optinteger
     ! luaL_optlstring
     ! luaL_optnumber
-    ! luaL_optstring
+    !M luaL_optstring
     ! luaL_prepbuffer
     ! luaL_prepbuffsize
     ! luaL_pushresult
@@ -331,13 +323,13 @@ module lua
     ! luaL_buffinit
     ! luaL_buffinitsize
     ! luaL_callmeta
-    ! luaL_checkany
-    ! luaL_checkinteger
-    ! luaL_checklstring
+    public :: luaL_checkany
+    public :: luaL_checkinteger
+    public :: luaL_checklstring
     ! luaL_checknumber
     ! luaL_checkoption
     ! luaL_checkstack
-    ! luaL_checkstring
+    public :: luaL_checkstring
     ! luaL_checktype
     ! luaL_checkudata
     ! luaL_checkversion
@@ -2262,7 +2254,7 @@ module lua
         !     character(kind=c_char), intent(in)        :: extramsg
         ! end subroutine lual_argcheck_
 
-        !***** Linking error on Windows - extern "C" problem?
+        !***** Linking error on Windows & Linux - extern "C" problem?
         ! !> @brief Raises an error reporting a problem with argument
         ! !! `arg` of the C function that called it, using a standard
         ! !! message that includes `extramsg` as a comment:
@@ -2284,6 +2276,57 @@ module lua
         !     ! Return value (needed for implementation of luaL_argcheck macro)
         !     integer(kind=c_int)                       :: lual_argerror_
         ! end function lual_argerror_
+
+        !> @brief Checks whether the function has an argument of any
+        !! type (including `nil`) at position `arg`.
+        !!
+        !! C signature: `void luaL_checkany (lua_State *L, int arg)`
+        subroutine lual_checkany(l, arg) bind(c, name='luaL_checkany')
+            import :: c_ptr, c_int
+            !> Pointer to Lua interpreter state
+            type(c_ptr), intent(in), value :: l
+            !> Called function argument position
+            integer(kind=c_int),    intent(in), value :: arg
+        end subroutine lual_checkany
+
+        !> @brief Checks whether the function has an argument of any
+        !! type (including `nil`) at position `arg`.
+        !!
+        !! C signature: `lua_Integer luaL_checkinteger (lua_State *L, int arg)`
+        function lual_checkinteger(l, arg) bind(c, name='luaL_checkinteger')
+            import :: c_ptr, c_int, c_long_long
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Called function argument position
+            integer(kind=c_int), intent(in), value :: arg
+
+            ! Called function argument position
+            integer(kind=c_long_long)              :: lual_checkinteger
+        end function lual_checkinteger
+
+        !> @brief Checks whether the function argument `arg` is a string
+        !! and returns this string; if `l` is not `NULL` fills `*l` with
+        !! the string's length.
+        !!
+        !! This function uses `lua_tolstring` to get its result, so all
+        !! conversions and caveats of that function apply here.
+        !!
+        !! @note This is thin wrapper around the C auxiliary function.
+        !! Application developers should call the Fortran functions
+        !! `lual_checklstring` or `lual_checkstring` instead.
+        !!
+        !! C signature: `const char *luaL_checklstring (lua_State *L, int arg, size_t *l)`
+        function lual_checklstring_(l, idx, len) bind(c, name='luaL_checklstring')
+            import :: c_int, c_ptr, c_size_t
+            !> Pointer to Lua interpreter state
+            type(c_ptr),         intent(in), value :: l
+            !> Index of element to convert
+            integer(kind=c_int), intent(in), value :: idx
+            !> String length
+            integer(kind=c_size_t), intent(inout)  :: len
+            ! Return value
+            type(c_ptr)                            :: lual_checklstring_
+        end function lual_checklstring_
 
         !> @brief Opens all standard Lua libraries into the given state.
         !!
@@ -2905,6 +2948,70 @@ contains
 
     !     return
     ! end subroutine lual_argcheck
+
+    !> @brief Checks whether the function argument `arg` is a string
+    !! and returns this string; if `l` is not `NULL` fills `*l` with
+    !! the string's length.
+    !!
+    !! This function uses `lua_tolstring` to get its result, so all
+    !! conversions and caveats of that function apply here.
+    !!
+    !! @note This is a Fortran wrapper which converts input and output
+    !! integers from Fortran to C types and converts the return value
+    !! C string pointer to a Fortran string.
+    !!
+    !! C signature: `const char *luaL_checklstring (lua_State *L, int arg, size_t *l)`
+    function lual_checklstring(l, idx, len)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),         intent(in)    :: l
+        !> Index of function argument to check
+        integer,             intent(in)    :: idx
+        !> Index of function argument to check
+        integer,             intent(inout) :: len
+
+        ! Return value
+        character(len=:), allocatable          :: lual_checklstring
+
+        integer(kind=c_size_t)                 :: dumlen
+        type(c_ptr)                            :: p2cstr
+        continue
+
+        p2cstr = lual_checklstring_(l, int(idx, kind=c_int), dumlen)
+        call c_f_string_ptr(p2cstr, lual_checklstring)
+        len = int(dumlen)
+
+        return
+    end function lual_checklstring
+
+    !> @brief Checks whether the function argument `arg` is a string
+    !! and returns this string.
+    !!
+    !! This function uses `lua_tolstring` to get its result, so all
+    !! conversions and caveats of that function apply here.
+    !!
+    !! @note This is a Fortran wrapper passes its arguments directly
+    !! to `lual_checkstring` which does all the C type converstion
+    !! before and after calling the C auxiliary function
+    !! `lual_checkstring_`
+    !!
+    !! C signature: `const char *luaL_checkstring (lua_State *L, int arg)`
+    function lual_checkstring(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),         intent(in), value :: l
+        !> Index of function argument to check
+        integer,             intent(in)        :: idx
+
+        ! Return value
+        character(len=:), allocatable          :: lual_checkstring
+
+        integer                                :: dumlen
+
+        continue
+
+        lual_checkstring = lual_checklstring(l, idx, dumlen)
+
+        return
+    end function lual_checkstring
 
     !> @brief Loads and runs the given file.
     !!
