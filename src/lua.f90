@@ -24,13 +24,13 @@
 !!
 !! Auxiliary functions which are not inmplemented:
 !!
-!!  * luaL_addchar
-!!  * luaL_addlstring
-!!  * luaL_addsize
-!!  * luaL_addstring
-!!  * luaL_addvalue
-!!  * luaL_argcheck
-!!  * luaL_argerror
+!!  * luaL_addchar - lua_Buffer manipulation not supported
+!!  * luaL_addlstring - lua_Buffer manipulation not supported
+!!  * luaL_addsize - lua_Buffer manipulation not supported
+!!  * luaL_addstring - lua_Buffer manipulation not supported
+!!  * luaL_addvalue - lua_Buffer manipulation not supported
+!!  * luaL_argcheck - error linking to C API function luaL_argerror - extern?
+!!  * luaL_argerror - error linking to C API function luaL_argerror - extern?
 !!  * luaL_buffinit
 !!  * luaL_buffinitsize
 !!  * luaL_callmeta
@@ -140,8 +140,8 @@ module lua
     ! luaL_addsize
     ! luaL_addstring
     ! luaL_addvalue
-    ! luaL_argcheck
-    ! luaL_argerror
+    ! luaL_argcheck - error linking to C API function luaL_argerror - extern?
+    ! luaL_argerror - error linking to C API function luaL_argerror - extern?
     ! luaL_buffinit
     ! luaL_buffinitsize
     ! luaL_callmeta
@@ -308,8 +308,8 @@ module lua
     ! luaL_addsize
     ! luaL_addstring
     ! luaL_addvalue
-    ! luaL_argcheck
-    ! luaL_argerror
+    ! public :: lual_argcheck - error linking to C API function luaL_argerror - extern?
+    ! public :: lual_argerror - error linking to C API function luaL_argerror - extern?
     ! luaL_buffinit
     ! luaL_buffinitsize
     ! luaL_callmeta
@@ -2221,6 +2221,51 @@ module lua
 
         ! Auxilliary library function
 
+        !***** Not used; the C version of `luaL_argcheck` is implemented
+        !***** as a macro so this interface cannot be bound to the C API
+        ! !> @brief Checks whether `cond` is true. If it is not, raises an
+        ! !! error reporting a problem with argument `arg` of the
+        ! !! C function that called it, using a standard message that
+        ! !! includes extramsg as a comment:
+        ! !!
+        ! !!      bad argument #arg to 'funcname' (extramsg)
+        ! !!
+        ! !! C signature: `void luaL_argcheck (lua_State *L, int cond, int arg, const char *extramsg)`
+        ! subroutine lual_argcheck_(l, cond, arg, extramsg) bind(c, name='lual_argcheck')
+        !     import :: c_ptr, c_int, c_char
+        !     !> Pointer to Lua interpreter state
+        !     type(c_ptr),            intent(in), value :: l
+        !     !> Logical 0/1 indicating true/false
+        !     integer(kind=c_int),    intent(in), value :: cond
+        !     !> Position of problematic argument in function argument list
+        !     integer(kind=c_int),    intent(in), value :: arg
+        !     !> C format (null terminated) string containing additional error detail
+        !     character(kind=c_char), intent(in)        :: extramsg
+        ! end subroutine lual_argcheck_
+
+        !***** Linking error on Windows - extern "C" problem?
+        ! !> @brief Raises an error reporting a problem with argument
+        ! !! `arg` of the C function that called it, using a standard
+        ! !! message that includes `extramsg` as a comment:
+        ! !!
+        ! !!      bad argument #arg to 'funcname' (extramsg)
+        ! !!
+        ! !! This function never returns.
+        ! !!
+        ! !! C signature: `int luaL_argerror (lua_State *L, int arg, const char *extramsg)`
+        ! function lual_argerror_(l, arg, extramsg) bind(c, name='lual_argerror')
+        !     import :: c_ptr, c_int, c_char
+        !     !> Pointer to Lua interpreter state
+        !     type(c_ptr),            intent(in), value :: l
+        !     !> Position of problematic argument in function argument list
+        !     integer(kind=c_int),    intent(in), value :: arg
+        !     !> C format (null terminated) string containing additional error detail
+        !     character(kind=c_char), intent(in)        :: extramsg
+
+        !     ! Return value (needed for implementation of luaL_argcheck macro)
+        !     integer(kind=c_int)                       :: lual_argerror_
+        ! end function lual_argerror_
+
         !> @brief Opens all standard Lua libraries into the given state.
         !!
         !! C signature: `void luaL_openlibs(lua_State *L)`
@@ -2763,6 +2808,84 @@ contains
 
         return
     end function lua_version
+
+    ! !> @brief Raises an error reporting a problem with argument
+    ! !! `arg` of the C function that called it, using a standard
+    ! !! message that includes `extramsg` as a comment:
+    ! !!
+    ! !!      bad argument #arg to 'funcname' (extramsg)
+    ! !!
+    ! !! This function never returns.
+    ! !!
+    ! !! This is a Fortran wrapper around `lua_argerror_`. This version
+    ! !! takes `extramsg` as a Fortran string. `arg` is converted to a
+    ! !! C integer and `extramsg` is null-terminated for the call to
+    ! !! `lua_argerror_` to maintain compatibility with the underlying
+    ! !! C API.
+    ! !!
+    ! !! @note `lual_argerror` is a subroutine, not an integer function.
+    ! !! Since `lual_argerror_` never returns, no return value will be
+    ! !! seen. The implementation of the original `lua_argcheck_` macro
+    ! !! takes advantage of C's use of integers as logical variables and
+    ! !! short-circuit logical operators; the integer return value exists
+    ! !! only to satisfy type requirements of the C compiler when
+    ! !! compiling the macro. The Fortran implementation of `lua_argcheck`
+    ! !! does not have to satisfy the type constraint and is more
+    ! !! reasonable to invoke it as a subroutine rather than as a
+    ! !! function.
+    ! !!
+    ! !! C signature: `int luaL_argerror (lua_State *L, int arg, const char *extramsg)`
+    ! subroutine lual_argerror(l, arg, extramsg)
+    !     !> Pointer to Lua interpreter state
+    !     type(c_ptr),            intent(in) :: l
+    !     !> Position of problematic argument in function argument list
+    !     integer,                intent(in) :: arg
+    !     !> C format (null terminated) string containing additional error detail
+    !     character(len=*),       intent(in) :: extramsg
+
+    !     integer(kind=c_int)                :: dummy
+    !     continue
+
+    !     dummy = lual_argerror_(l, int(arg, kind=c_int),                 &
+    !         extramsg // c_null_char)
+
+    !     return
+    ! end subroutine lual_argerror
+
+    ! !> @brief Checks whether `cond` is true. If it is not, raises an
+    ! !! error reporting a problem with argument `arg` of the
+    ! !! C function that called it, using a standard message that
+    ! !! includes extramsg as a comment:
+    ! !!
+    ! !!      bad argument #arg to 'funcname' (extramsg)
+    ! !!
+    ! !! This routine replaces the macro `luaL_argcheck` with a call to
+    ! !! the Fortran wrapper around `lual_argerror`. This version takes
+    ! !! `cond` as a `LOGICAL` and `extramsg` as a Fortran
+    ! !! string. `l`, `arg`, and `extramsg` are passed unmodified to
+    ! !! `lual_argerror`
+    ! !!
+    ! !! C signature: `void luaL_argcheck (lua_State *L, int cond, int arg, const char *extramsg)`
+    ! subroutine lual_argcheck(l, cond, arg, extramsg)
+    !     !> Pointer to Lua interpreter state
+    !     type(c_ptr),            intent(in) :: l
+    !     !> Condition true/false value
+    !     logical,                intent(in) :: cond
+    !     !> Position of problematic argument in function argument list
+    !     integer,                intent(in) :: arg
+    !     !> String containing additional error detail
+    !     character(len=*),       intent(in) :: extramsg
+
+    !     ! integer(kind=c_int)                :: icond
+
+    !     continue
+
+    !     if (cond) then
+    !         call lual_argerror(l, arg, extramsg)
+    !     end if
+
+    !     return
+    ! end subroutine lual_argcheck
 
     !> @brief Loads and runs the given file.
     !!
