@@ -8,7 +8,7 @@ program ut_utility
     use, intrinsic :: iso_fortran_env, only: WP => REAL64, INT64,       &
         stdout => OUTPUT_UNIT
     use, intrinsic :: iso_c_binding, only: c_ptr, c_associated,         &
-        c_null_ptr
+        c_null_ptr, c_int
     use :: lua
     use :: toast
     implicit none
@@ -16,18 +16,24 @@ program ut_utility
     ! Lua state object
     type(c_ptr) :: l
 
-    character(len=32) :: fname
+    ! character(len=32) :: fname
 
+    integer :: i
     integer :: nstack
-    integer :: rc
-    logical :: tf
-    integer(kind=INT64) :: tlength
+    ! integer :: rc
+    ! logical :: tf
+    ! integer(kind=INT64) :: tlength
     ! integer(kind=INT64) :: version
 
     type(c_ptr) :: misc_ptr
-    integer(kind=INT64) :: ival
-    real(kind=WP) :: dval
+    ! integer(kind=INT64) :: ival
+    ! real(kind=WP) :: dval
     character(len=:), allocatable :: cval
+    character(len=:), allocatable :: waterloo
+    character(len=:), allocatable :: a_
+    character(len=:), allocatable :: b_
+    character(len=:), allocatable :: c_
+    character(len=:), allocatable :: o_
 
     type(TestCase) :: test
 
@@ -65,8 +71,64 @@ program ut_utility
     ! nstack = lua_gettop(l)
     ! call test%assertequal(nstack, 0, message="Expect empty stack after lua_dofile()")
 
+    a_ = 'A'
+    b_ = 'B'
+    c_ = 'C'
+    o_ = "O"
+    misc_ptr = lua_pushstring(l, a_)
+    misc_ptr = lua_pushstring(l, b_)
+    misc_ptr = lua_pushstring(l, c_)
 
+    call lua_pushvalue(l, 1_c_int)
 
+    call lua_copy(l, 2_c_int, 3_c_int)
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 4, message="Expect four elements on stack")
+
+    if (allocated(waterloo)) then
+        deallocate(waterloo)
+    end if
+    allocate(character(len=nstack) :: waterloo)
+    do i = 1, nstack
+        cval = lua_tostring(l, int(i, c_int))
+        waterloo(i:i) = cval(1:1)
+    end do
+
+    write(unit=stdout, fmt='("Mama mia! It''s ", A4, "!")') waterloo
+    call test%assertequal(waterloo, "ABBA", message="Matched ABBA")
+
+    call lua_pop(l, 1)
+    misc_ptr = lua_pushstring(l, o_)
+    call lua_copy(l, -1_c_int, 1_c_int)
+    call lua_pop(l, 1_c_int)
+    call lua_rotate(l, 1_c_int, 1_c_int)
+
+    ! write(unit=stdout, fmt='(A)') "After r(3,1)"
+    ! nstack = lua_gettop(l)
+    ! do i = nstack, 1, -1
+    !     cval = lua_tostring(l, int(i, c_int))
+    !     write(unit=stdout, fmt='("Stack(", I0, ") is: ", A)') i, cval
+    ! end do
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 3, message="Expect three elements on stack")
+
+    call lua_concat(l, 3_c_int)
+    cval = lua_tostring(l, -1_c_int)
+    write(unit=stdout, fmt='(A, ", STOP IT!")') cval
+    ! cval = lua_tostring(l, -1_c_int)
+    ! waterloo = cval(1:4)
+
+    call test%assertequal(cval, "BOB", message="Matched BOB")
+
+    ! write(unit=stdout, fmt='(A, ", STOP IT!")') waterloo
+
+    nstack = lua_gettop(l)
+    call test%assertequal(nstack, 1, message="Expect one element on stack")
+
+    ! Stop this embarrassment...
+    call lua_pop(l, 1)
 
     ! Close the interpreter
 
