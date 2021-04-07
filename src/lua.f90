@@ -17,6 +17,7 @@
 !!  * lua_getallocf
 !!  * lua_getextraspace
 !!  * lua_newstate
+!!  * lua_numbertointeger - macro, needs implementation
 !!  * lua_pushfstring
 !!  * lua_pushliteral
 !!  * lua_pushvfstring
@@ -97,6 +98,7 @@ module lua
     !X lua_getallocf - demonstrate need - low-level memory management beyond scope
     !X lua_getextraspace - demonstrate need - low-level memory management beyond scope
     !o lua_newstate - use lual_newstate
+    !* lua_numbertointeger - macro, needs implementation
     !o lua_pushfstring - compose string with format() then use lua_pushstring
     !o lua_pushliteral - use lua_pushstring
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
@@ -246,7 +248,7 @@ module lua
     public :: lua_newthread
     public :: lua_newuserdata
     public :: lua_next
-    public :: lua_numbertointeger
+    ! public :: lua_numbertointeger - macro; needs implementation
     public :: lua_pcall
     public :: lua_pcallk
     public :: lua_pop
@@ -1081,31 +1083,42 @@ module lua
             integer(kind=c_int)                    :: lua_next
         end function lua_next
 
-        !> @brief Converts a Lua float to a Lua integer.
-        !!
-        !! This macro assumes that `n` has an integral value. If that
-        !! value is within the range of Lua integers, it is converted to
-        !! an integer and assigned to `*p`. The macro results in a
-        !! boolean indicating whether the conversion was successful.
-        !!
-        !! It is probably best to use Fortran's `int()` intrinsic
-        !! instead.
-        !!
-        !! @note This range test can be tricky to do correctly without
-        !! this macro, due to roundings.
-        !!
-        !! C signature: `int lua_numbertointeger (lua_Number n, lua_Integer *p)`
-        function lua_numbertointeger(n, i) bind(c, name='lua_numbertointeger')
-            import :: c_int, c_lua_number, c_lua_integer
-            !> Pointer to Lua interpreter state
-            real(kind=c_lua_number),       intent(in), value :: n
-            !> Index of previous key extracted from table; set to `nil`
-            !! to extract first key
-            integer(kind=c_lua_integer), intent(in)        :: i
-            ! Return value
-            integer(kind=c_int)                          :: lua_numbertointeger
-        end function lua_numbertointeger
-
+        ! !> @brief Converts a Lua float to a Lua integer.
+        ! !!
+        ! !! This macro assumes that `n` has an integral value. If that
+        ! !! value is within the range of Lua integers, it is converted to
+        ! !! an integer and assigned to `*p`. The macro results in a
+        ! !! boolean indicating whether the conversion was successful.
+        ! !!
+        ! !! It is probably best to use Fortran's `int()` intrinsic
+        ! !! instead.
+        ! !!
+        ! !! @note This range test can be tricky to do correctly without
+        ! !! this macro, due to roundings.
+        ! !!
+        ! !! C signature: `int lua_numbertointeger (lua_Number n, lua_Integer *p)`
+        ! ! /*
+        ! ! @@ lua_numbertointeger converts a float number to an integer, or
+        ! ! ** returns 0 if float is not within the range of a lua_Integer.
+        ! ! ** (The range comparisons are tricky because of rounding. The tests
+        ! ! ** here assume a two-complement representation, where MININTEGER always
+        ! ! ** has an exact representation as a float; MAXINTEGER may not have one,
+        ! ! ** and therefore its conversion to float may have an ill-defined value.)
+        ! ! */
+        ! ! #define lua_numbertointeger(n,p) \
+        ! !   ((n) >= (LUA_NUMBER)(LUA_MININTEGER) && \
+        ! !    (n) < -(LUA_NUMBER)(LUA_MININTEGER) && \
+        ! !       (*(p) = (LUA_INTEGER)(n), 1))        !!
+        ! function lua_numbertointeger(n, i) bind(c, name='lua_numbertointeger')
+        !     import :: c_int, c_lua_number, c_lua_integer
+        !     !> Pointer to Lua interpreter state
+        !     real(kind=c_lua_number),     intent(in), value :: n
+        !     !> Index of previous key extracted from table; set key to `nil`
+        !     !! to extract first key
+        !     integer(kind=c_lua_integer), intent(in)        :: i
+        !     ! Return value
+        !     integer(kind=c_int)                            :: lua_numbertointeger
+        ! end function lua_numbertointeger
 
         !> @brief  Starts and resumes a coroutine in the given thread `L`.
         !!
@@ -2843,9 +2856,10 @@ contains
     !! The Lua value must be an integer, or a number or string
     !! convertible to an integer; otherwise, `lua_tointeger` returns 0
     !!
-    !! C signature: `lua_Integer lua_tointeger(lua_State *l, int idx)`
+    !! @note Fortran wrapper around `lua_tointegerx()` in Lua C API;
+    !! replaces C macro
     !!
-    !! @note Fortran wrapper around `lua_tointegerx()` in Lua C API
+    !! C signature: `lua_Integer lua_tointeger(lua_State *l, int idx)`
     function lua_tointeger(l, idx)
         !> Pointer to Lua interpreter state
         type(c_ptr),       intent(in) :: l
@@ -2867,9 +2881,10 @@ contains
     !! The Lua value must be an number or a string convertible to a
     !! number; otherwise, `lua_tonumber` returns 0
     !!
-    !! C signature: `lua_Number lua_tonumber (lua_State *L, int index)`
+    !! @note Fortran wrapper around `lua_tonumberx()` in Lua C API;
+    !! replaces C macro
     !!
-    !! @note Fortran wrapper around `lua_tonumberx()` in Lua C API
+    !! C signature: `lua_Number lua_tonumber (lua_State *L, int index)`
     function lua_tonumber(l, idx)
         use, intrinsic :: iso_fortran_env, only: REAL64
         !> Pointer to Lua interpreter state
