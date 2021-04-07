@@ -86,16 +86,18 @@ program ut_utility
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 4, message="Expect four elements on stack")
 
-    if (allocated(waterloo)) then
-        deallocate(waterloo)
-    end if
-    allocate(character(len=nstack) :: waterloo)
+    waterloo = ""
+    ! if (allocated(waterloo)) then
+    !     deallocate(waterloo)
+    ! end if
+    ! allocate(character(len=nstack) :: waterloo)
     do i = 1, nstack
         cval = lua_tostring(l, int(i, c_int))
-        waterloo(i:i) = cval(1:1)
+        ! waterloo(i:i) = cval(1:1)
+        waterloo = waterloo // cval
     end do
 
-    write(unit=stdout, fmt='("Mama mia! It''s ", A4, "!")') waterloo
+    write(unit=stdout, fmt='("Mama mia! It''s ", A, "!")') waterloo
     call test%assertequal(waterloo, "ABBA", message="Matched ABBA")
 
     call lua_pop(l, 1)
@@ -115,12 +117,19 @@ program ut_utility
     call test%assertequal(nstack, 3, message="Expect three elements on stack")
 
     call lua_concat(l, 3_c_int)
-    cval = lua_tostring(l, -1_c_int)
-    write(unit=stdout, fmt='(A, ", STOP IT!")') cval
+    waterloo = lua_tostring(l, -1_c_int)
+
+    waterloo = ''
+    do i = 1, nstack
+        cval = lua_tostring(l, int(i, c_int))
+        waterloo = waterloo // cval
+    end do
+
+    write(unit=stdout, fmt='(A, ", STOP IT!")') waterloo
     ! cval = lua_tostring(l, -1_c_int)
     ! waterloo = cval(1:4)
 
-    call test%assertequal(cval, "BOB", message="Matched BOB")
+    call test%assertequal(waterloo, "BOB", message="Matched BOB")
 
     ! write(unit=stdout, fmt='(A, ", STOP IT!")') waterloo
 
