@@ -26,6 +26,8 @@ program ut_utility
     ! integer(kind=INT64) :: version
 
     type(c_ptr) :: misc_ptr
+    integer :: fsize
+    integer :: csize
     ! integer(kind=INT64) :: ival
     ! real(kind=WP) :: dval
     character(len=:), allocatable :: cval
@@ -116,14 +118,19 @@ program ut_utility
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 3, message="Expect three elements on stack")
 
-    call lua_concat(l, 3_c_int)
-    waterloo = lua_tostring(l, -1_c_int)
-
     waterloo = ''
     do i = 1, nstack
+        misc_ptr = lua_tolstring(l, i, c_null_ptr)
+        csize = c_strlen(misc_ptr)
+
         cval = lua_tostring(l, int(i, c_int))
+        fsize = len(cval)
+        write(unit=stdout, fmt='("Stack(", I0, ") is: """, A, """, length: C = ", I0, ", F = ", I0)') i, cval, csize, fsize
         waterloo = waterloo // cval
     end do
+
+    call lua_concat(l, 3_c_int)
+    waterloo = lua_tostring(l, -1_c_int)
 
     write(unit=stdout, fmt='(A, ", STOP IT!")') waterloo
     ! cval = lua_tostring(l, -1_c_int)
