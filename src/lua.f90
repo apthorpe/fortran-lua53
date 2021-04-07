@@ -376,6 +376,10 @@ module lua
     ! luaL_unref
     ! luaL_where
 
+    ! Internal debugging
+    public :: c_strlen
+    public :: lua_tolstring
+
     !> @name Thread control options
 
     !!!@{
