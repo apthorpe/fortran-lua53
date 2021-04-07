@@ -19,8 +19,8 @@
 !!  * lua_newstate
 !!  * lua_numbertointeger - macro, needs implementation
 !!  * lua_pushfstring
-!!  * lua_pushliteral
 !!  * lua_pushvfstring
+!!  * lua_pushglobaltable - requires `LUA_REGISTRYINDEX` and `LUA_RIDX_GLOBALS` (= 2) from `lua.h`; not exported.
 !!  * lua_setallocf
 !!  * lua_upvalueindex - requires `LUA_REGISTRYINDEX` from `lua.h`; not exported. See `luaL_getmetatable`
 !!
@@ -100,7 +100,7 @@ module lua
     !o lua_newstate - use lual_newstate
     !* lua_numbertointeger - macro, needs implementation
     !o lua_pushfstring - compose string with format() then use lua_pushstring
-    !o lua_pushliteral - use lua_pushstring
+    !* lua_pushglobaltable - requires `LUA_REGISTRYINDEX` and `LUA_RIDX_GLOBALS` (= 2) from `lua.h`; not exported.
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
     !X lua_setallocf - demonstrate need - low-level memory management beyond scope
 
@@ -255,10 +255,10 @@ module lua
     public :: lua_pushboolean
     public :: lua_pushcclosure
     ! public :: lua_pushfstring - compose string with format() then use lua_pushstring
-    public :: lua_pushglobaltable
+    ! public :: lua_pushglobaltable ! requires `LUA_REGISTRYINDEX` and `LUA_RIDX_GLOBALS` (= 2) from `lua.h`; not exported.
     public :: lua_pushinteger
     public :: lua_pushlightuserdata
-    ! public :: lua_pushliteral - use lua_pushstring
+    public :: lua_pushliteral
     public :: lua_pushlstring
     public :: lua_pushnil
     public :: lua_pushnumber
@@ -275,6 +275,7 @@ module lua
     public :: lua_rawseti
     public :: lua_rawsetp
     public :: lua_register
+    public :: lua_remove
     public :: lua_replace
     public :: lua_resume
     public :: lua_rotate
@@ -1616,15 +1617,6 @@ module lua
             integer(kind=c_int)                         :: lua_pcallk
         end function lua_pcallk
 
-        !> @brief Pushes the global environment onto the stack.
-        !!
-        !! C signature: `void lua_pushglobaltable (lua_State *L)`
-        subroutine lua_pushglobaltable(l) bind(c, name='lua_pushglobaltable')
-            import :: c_ptr
-            !> Pointer to Lua interpreter state
-            type(c_ptr),            intent(in), value :: l
-        end subroutine lua_pushglobaltable
-
         !> @brief Pushes the string pointed to by `s` with size `len`
         !! onto the stack.
         !!
@@ -2081,21 +2073,6 @@ module lua
             type(c_ptr),         intent(in), value :: p
         end subroutine lua_rawsetp
 
-        ! !***** Why won't this link? MACRO!!!!
-
-        ! !> @brief Moves the top element into the given valid index
-        ! !! without shifting any element (therefore replacing the value
-        ! !! at that given index), and then pops the top element.
-        ! !!
-        ! !! C signature: `void lua_replace (lua_State *L, int index)`
-        ! subroutine lua_replace(l, idx) bind(c, name='lua_replace')
-        !     import :: c_int, c_ptr
-        !     !> Pointer to Lua interpreter state
-        !     type(c_ptr),         intent(in), value :: l
-        !     !> Index of element to replace with top stack element
-        !     integer(kind=c_int), intent(in), value :: idx
-        ! end subroutine lua_replace
-
         !> @brief Rotates the stack elements between the valid index
         !! `idx` and the top of the stack.
         !!
@@ -2441,7 +2418,7 @@ contains
         integer,     intent(in) :: idx
         continue
 
-        call lua_rotate(L, int(idx, kind=c_int), 1_c_int)
+        call lua_rotate(l, int(idx, kind=c_int), 1_c_int)
 
         return
     end subroutine lua_insert
@@ -2779,6 +2756,25 @@ contains
 
         return
     end function lua_pcall
+
+    !> @brief Removes the element at the given valid index, shifting
+    !! down the elements above this index to fill the gap. This
+    !! function cannot be called with a pseudo-index, because a
+    !! pseudo-index is not an actual stack position.
+    !!
+    !! C signature: `void lua_remove (lua_State *L, int index)`
+    subroutine lua_remove(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        continue
+
+        call lua_rotate(L, int(idx, kind=c_int), -1_c_int)
+        call lua_pop(L, 1_c_int)
+
+        return
+    end subroutine lua_remove
 
     !> @brief Moves the top element into the given valid index
     !! without shifting any element (therefore replacing the value
@@ -3336,7 +3332,7 @@ contains
 
     !> @brief Pops `n` elements from the stack.
     !!
-    !! @note Fortran wrapper around `lua_settop`
+    !! @note Fortran wrapper around `lua_settop`; replaces C macro.
     !!
     !! C signature: `void lua_pop(lua_State *l, int n)
     subroutine lua_pop(l, n)
@@ -3361,7 +3357,7 @@ contains
     !! protocol to receive its parameters and return its results
     !! (see lua_CFunction).
     !!
-    !! @note Fortran wrapper around `lua_pushcclosure`
+    !! @note Fortran wrapper around `lua_pushcclosure`; replaces C macro
     !!
     !! C signature: `void lua_pushcfunction(lua_State *L, lua_CFunction f)`
     subroutine lua_pushcfunction(l, f)
@@ -3375,6 +3371,46 @@ contains
 
         return
     end subroutine lua_pushcfunction
+
+    !***** MACRO; cannot be implemented without having values for
+    !***** LUA_REGISTRYINDEX and LUA_RIDX_GLOBALS
+
+    ! !> @brief Pushes the global environment onto the stack. Wrapper
+    ! !! around `lua_rawgeti`
+    ! !!
+    ! !! Original C macro: `((void)lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS))`
+    ! !!
+    ! !! C signature: `void lua_pushglobaltable (lua_State *L)`
+    ! subroutine lua_pushglobaltable(l)
+    !     !> Pointer to Lua interpreter state
+    !     type(c_ptr),            intent(in), value :: l
+    !     continue
+
+    !     call lua_rawgeti(l, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS)
+
+    !     return
+    ! end subroutine lua_pushglobaltable
+
+    !> @brief This function is equivalent to `lua_pushstring`, but
+    !! should be used only when `s` is a literal string.
+    !!
+    !! @note Fortran wrapper around `lua_pushstring`; replaces C macro
+    !!
+    !! C signature: `const char *lua_pushliteral (lua_State *L, const char *s)`
+    function lua_pushliteral(l, s)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),            intent(in) :: l
+        !> String to push onto stack
+        character(kind=c_char), intent(in) :: s
+        ! Return value
+        type(c_ptr)                        :: lua_pushliteral
+
+        continue
+
+        lua_pushliteral = lua_pushstring(l, s)
+
+        return
+    end function lua_pushliteral
 
     !> @brief Sets the C function f as the new value of global `name`.
     !!
