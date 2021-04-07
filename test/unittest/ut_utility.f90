@@ -118,7 +118,7 @@ program ut_utility
 
     waterloo = ''
     do i = 1, nstack
-        misc_ptr = lua_tolstring(l, i, c_null_ptr)
+        ! misc_ptr = lua_tolstring(l, i, c_null_ptr)
         cval = lua_tostring(l, int(i, c_int))
         waterloo = waterloo // cval
     end do
