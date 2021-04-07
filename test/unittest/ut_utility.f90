@@ -123,16 +123,14 @@ program ut_utility
         waterloo = waterloo // cval
     end do
 
+    call test%assertequal(waterloo, "BOB", message="Matched BOB - iterative")
+
     call lua_concat(l, 3_c_int)
     waterloo = lua_tostring(l, -1_c_int)
 
     write(unit=stdout, fmt='(A, ", STOP IT!")') waterloo
-    ! cval = lua_tostring(l, -1_c_int)
-    ! waterloo = cval(1:4)
 
-    call test%assertequal(waterloo, "BOB", message="Matched BOB")
-
-    ! write(unit=stdout, fmt='(A, ", STOP IT!")') waterloo
+    call test%assertequal(waterloo, "BOB", message="Matched BOB - concat")
 
     nstack = lua_gettop(l)
     call test%assertequal(nstack, 1, message="Expect one element on stack")
