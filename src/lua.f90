@@ -17,12 +17,14 @@
 !!  * lua_getallocf
 !!  * lua_getextraspace
 !!  * lua_newstate
-!!  * lua_numbertointeger - macro, needs implementation
 !!  * lua_pushfstring
 !!  * lua_pushvfstring
 !!  * lua_pushglobaltable - requires `LUA_REGISTRYINDEX` and `LUA_RIDX_GLOBALS` (= 2) from `lua.h`; not exported.
 !!  * lua_setallocf
 !!  * lua_upvalueindex - requires `LUA_REGISTRYINDEX` from `lua.h`; not exported. See `luaL_getmetatable`
+!!  * lua_pushunsigned - deprecated in Lua 5.3
+!!  * lua_tounsigned - deprecated in Lua 5.3
+!!  * lua_tounsignedx - deprecated in Lua 5.3
 !!
 !! Auxiliary functions which are not inmplemented:
 !!
@@ -40,6 +42,7 @@
 !!  * luaL_checkstack
 !!  * luaL_checktype
 !!  * luaL_checkudata
+!!  * luaL_checkunsigned - deprecated in Lua 5.3
 !!  * luaL_error
 !!  * luaL_execresult
 !!  * luaL_fileresult
@@ -57,6 +60,7 @@
 !!  * luaL_optlstring
 !!  * luaL_optnumber
 !!  * luaL_optstring
+!!  * luaL_optunsigned - deprecated in Lua 5.3
 !!  * luaL_prepbuffer
 !!  * luaL_prepbuffsize
 !!  * luaL_pushresult
@@ -98,7 +102,6 @@ module lua
     !X lua_getallocf - demonstrate need - low-level memory management beyond scope
     !X lua_getextraspace - demonstrate need - low-level memory management beyond scope
     !o lua_newstate - use lual_newstate
-    !* lua_numbertointeger - macro, needs implementation
     !o lua_pushfstring - compose string with format() then use lua_pushstring
     !* lua_pushglobaltable - requires `LUA_REGISTRYINDEX` and `LUA_RIDX_GLOBALS` (= 2) from `lua.h`; not exported.
     !o lua_pushvfstring - compose string with format() then use lua_pushstring
@@ -248,7 +251,7 @@ module lua
     public :: lua_newthread
     public :: lua_newuserdata
     public :: lua_next
-    ! public :: lua_numbertointeger - macro; needs implementation
+    public :: lua_numbertointeger
     public :: lua_pcall
     public :: lua_pcallk
     public :: lua_pop
@@ -381,8 +384,8 @@ module lua
     ! luaL_where
 
     ! Internal debugging
-    public :: c_strlen
-    public :: lua_tolstring
+    ! public :: c_strlen
+    ! public :: lua_tolstring
 
     !> @name Thread control options
 
@@ -1083,43 +1086,6 @@ module lua
             ! Return value
             integer(kind=c_int)                    :: lua_next
         end function lua_next
-
-        ! !> @brief Converts a Lua float to a Lua integer.
-        ! !!
-        ! !! This macro assumes that `n` has an integral value. If that
-        ! !! value is within the range of Lua integers, it is converted to
-        ! !! an integer and assigned to `*p`. The macro results in a
-        ! !! boolean indicating whether the conversion was successful.
-        ! !!
-        ! !! It is probably best to use Fortran's `int()` intrinsic
-        ! !! instead.
-        ! !!
-        ! !! @note This range test can be tricky to do correctly without
-        ! !! this macro, due to roundings.
-        ! !!
-        ! !! C signature: `int lua_numbertointeger (lua_Number n, lua_Integer *p)`
-        ! ! /*
-        ! ! @@ lua_numbertointeger converts a float number to an integer, or
-        ! ! ** returns 0 if float is not within the range of a lua_Integer.
-        ! ! ** (The range comparisons are tricky because of rounding. The tests
-        ! ! ** here assume a two-complement representation, where MININTEGER always
-        ! ! ** has an exact representation as a float; MAXINTEGER may not have one,
-        ! ! ** and therefore its conversion to float may have an ill-defined value.)
-        ! ! */
-        ! ! #define lua_numbertointeger(n,p) \
-        ! !   ((n) >= (LUA_NUMBER)(LUA_MININTEGER) && \
-        ! !    (n) < -(LUA_NUMBER)(LUA_MININTEGER) && \
-        ! !       (*(p) = (LUA_INTEGER)(n), 1))        !!
-        ! function lua_numbertointeger(n, i) bind(c, name='lua_numbertointeger')
-        !     import :: c_int, c_lua_number, c_lua_integer
-        !     !> Pointer to Lua interpreter state
-        !     real(kind=c_lua_number),     intent(in), value :: n
-        !     !> Index of previous key extracted from table; set key to `nil`
-        !     !! to extract first key
-        !     integer(kind=c_lua_integer), intent(in)        :: i
-        !     ! Return value
-        !     integer(kind=c_int)                            :: lua_numbertointeger
-        ! end function lua_numbertointeger
 
         !> @brief  Starts and resumes a coroutine in the given thread `L`.
         !!
@@ -2694,6 +2660,53 @@ contains
 
         return
     end subroutine lua_newtable
+
+    !> @brief Converts a Lua float to a Lua integer.
+    !!
+    !! This macro assumes that `n` has an integral value. If that
+    !! value is within the range of Lua integers, it is converted to
+    !! an integer and assigned to `*p`. The macro results in a
+    !! boolean indicating whether the conversion was successful.
+    !!
+    !! It is probably best to use Fortran's `int()` intrinsic
+    !! instead, though it doesn't restrict range or return a logical
+    !! value (false = overflow)
+    !!
+    !! @note This range test can be tricky to do correctly without
+    !! this macro, due to roundings.
+    !!
+    !! C signature: `int lua_numbertointeger (lua_Number n, lua_Integer *p)`
+    ! /*
+    ! @@ lua_numbertointeger converts a float number to an integer, or
+    ! ** returns 0 if float is not within the range of a lua_Integer.
+    ! ** (The range comparisons are tricky because of rounding. The tests
+    ! ** here assume a two-complement representation, where MININTEGER always
+    ! ** has an exact representation as a float; MAXINTEGER may not have one,
+    ! ** and therefore its conversion to float may have an ill-defined value.)
+    ! */
+    ! #define lua_numbertointeger(n,p) \
+    !   ((n) >= (LUA_NUMBER)(LUA_MININTEGER) && \
+    !    (n) < -(LUA_NUMBER)(LUA_MININTEGER) && \
+    !       (*(p) = (LUA_INTEGER)(n), 1))        !!
+    function lua_numbertointeger(n, i)
+        !> Real number to convert
+        real(kind=c_lua_number),     intent(in)  :: n
+        !> Destination integer
+        integer(kind=c_lua_integer), intent(out) :: i
+
+        ! Return value
+        logical                                  :: lua_numbertointeger
+        continue
+
+        lua_numbertointeger = (abs(n) < real(huge(i), kind=c_lua_number))
+        if (lua_numbertointeger) then
+            i = int(n, kind=c_lua_integer)
+        else
+            i = 0_c_lua_integer
+        end if
+
+        return
+    end function lua_numbertointeger
 
     !> @brief Calls a function in protected mode
     !!
