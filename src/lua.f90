@@ -1378,8 +1378,6 @@ module lua
             type(c_ptr)                            :: lua_touserdata
         end function lua_touserdata
 
-
-
         !> @brief Converts the Lua value at the given index to a C
         !! string.
         !!
@@ -2721,7 +2719,41 @@ contains
         return
     end subroutine lua_newtable
 
-    !> @brief Macro replacement that calls `lua_pcallk()`.
+    !> @brief Calls a function in protected mode
+    !!
+    !! Both `nargs` and `nresults` have the same meaning as in
+    !! `lua_call`. If there are no errors during the call,
+    !! `lua_pcallk` behaves exactly like `lua_callk`. However, if
+    !! there is any error, `lua_pcallk` catches it, pushes a single
+    !! value on the stack (the error object), and returns an error
+    !! code. Like `lua_call`, `lua_pcallk` always removes the
+    !! function and its arguments from the stack.
+    !!
+    !! If `msgh` is 0, then the error object returned on the stack
+    !! is exactly the original error object. Otherwise, `msgh` is
+    !! the stack index of a message handler. (This index cannot be a
+    !! pseudo-index.) In case of runtime errors, this function will
+    !! be called with the error object and its return value will be
+    !! the object returned on the stack by `lua_pcallk`.
+    !!
+    !! Typically, the message handler is used to add more debug
+    !! information to the error object, such as a stack traceback.
+    !! Such information cannot be gathered after the return of
+    !! `lua_pcallk`, since by then the stack has unwound.
+    !!
+    !! The `lua_pcallk` function returns one of the following
+    !! constants (defined in `lua.h`):
+    !!   * `LUA_TH_OK` (0): success.
+    !!   * `LUA_TH_ERRRUN`: a runtime error.
+    !!   * `LUA_TH_ERRMEM`: memory allocation error. For such errors,
+    !!     Lua does not call the message handler.
+    !!   * `LUA_TH_ERRERR`: error while running the message handler.
+    !!   * `LUA_TH_ERRGCMM`: error while running a `__gc` metamethod.
+    !!     For such errors, Lua does not call the message handler
+    !!     (as this kind of error typically has no relation with the
+    !!     function being called).
+    !!
+    !! @note This function replaces a C macro that calls `lua_pcallk()`.
     !!
     !! C signature: `int lua_pcall(lua_State *L, int nargs, int nresults, int msgh)`
     !!
