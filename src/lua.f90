@@ -12,15 +12,16 @@
 !!
 !! C API functions which are not inmplemented:
 !!
-!!   * lua_atpanic
-!!   * lua_dump
-!!   * lua_getallocf
-!!   * lua_getextraspace
-!!   * lua_newstate
-!!   * lua_pushfstring
-!!   * lua_pushliteral
-!!   * lua_pushvfstring
-!!   * lua_setallocf
+!!  * lua_atpanic
+!!  * lua_dump
+!!  * lua_getallocf
+!!  * lua_getextraspace
+!!  * lua_newstate
+!!  * lua_pushfstring
+!!  * lua_pushliteral
+!!  * lua_pushvfstring
+!!  * lua_setallocf
+!!  * lua_upvalueindex - requires `LUA_REGISTRYINDEX` from `lua.h`; not exported. See `luaL_getmetatable`
 !!
 !! Auxiliary functions which are not inmplemented:
 !!
@@ -42,7 +43,7 @@
 !!  * luaL_execresult
 !!  * luaL_fileresult
 !!  * luaL_getmetafield
-!!  * luaL_getmetatable
+!!  * luaL_getmetatable - requires `LUA_REGISTRYINDEX` from `lua.h`; not exported
 !!  * luaL_getsubtable
 !!  * luaL_gsub
 !!  * luaL_loadbuffer
@@ -295,7 +296,7 @@ module lua
     public :: lua_tostring
     public :: lua_type
     public :: lua_typename
-    public :: lua_upvalueindex
+    ! public :: lua_upvalueindex - requires `LUA_REGISTRYINDEX` from `lua.h`; not exported
     public :: lua_touserdata
     public :: lua_version
     public :: lua_xmove
@@ -1446,20 +1447,22 @@ module lua
             type(c_ptr)                            :: lua_typename_
         end function lua_typename_
 
-        !> @brief Returns the pseudo-index that represents the `i`-th
-        !! upvalue of the running function.
-        !!
-        !! `i` can range from 1 to 256. Upvalues refer to variables
-        !! associated with C closures.
-        !!
-        !! C signature: `int lua_upvalueindex (int i)`
-        function lua_upvalueindex(i) bind(c, name='lua_upvalueindex')
-            import :: c_int
-            !> Upvalue index
-            integer(kind=c_int), intent(in), value :: i
-            ! Return value
-            integer(kind=c_int)                    :: lua_upvalueindex
-        end function lua_upvalueindex
+        !***** requires `LUA_REGISTRYINDEX` from `lua.h`; not exported
+
+        ! !> @brief Returns the pseudo-index that represents the `i`-th
+        ! !! upvalue of the running function.
+        ! !!
+        ! !! `i` can range from 1 to 256. Upvalues refer to variables
+        ! !! associated with C closures.
+        ! !!
+        ! !! C signature: `int lua_upvalueindex (int i)`
+        ! function lua_upvalueindex(i) bind(c, name='lua_upvalueindex')
+        !     import :: c_int
+        !     !> Upvalue index
+        !     integer(kind=c_int), intent(in), value :: i
+        !     ! Return value
+        !     integer(kind=c_int)                    :: lua_upvalueindex
+        ! end function lua_upvalueindex
 
         ! Auxilliary library functions
 
@@ -3155,6 +3158,32 @@ contains
 
         return
     end function lual_dostring
+
+    !***** Needs access to (lua.h) constant LUA_REGISTRY_INDEX which is
+    !***** not exported
+
+    ! !> @brief Pushes onto the stack the metatable associated with name
+    ! !! `tname` in the registry (see `luaL_newmetatable`) (`nil` if there
+    ! !! is no metatable associated with that name). Returns the type of
+    ! !! the pushed value.
+    ! !!
+    ! !! @note Originally implemented as a C macro in `lauxlib.h`
+    ! !!
+    ! !! C signature: `int luaL_getmetatable (lua_State *L, const char *tname)`
+    ! function lual_getmetatable(l, tname)
+    !     !> Pointer to Lua interpreter state
+    !     type(c_ptr),      intent(in) :: l
+    !     !> File name of Lua chunk
+    !     character(len=*), intent(in) :: tname
+    !     ! Return value
+    !     integer                      :: lual_getmetatable
+    !     continue
+
+    !     lual_getmetatable = lual_getfield(l, LUA_REGISTRY_INDEX,        &
+    !         tname // c_null_char)
+
+    !     return
+    ! end function lual_getmetatable
 
     !> @brief Macro replacement that calls `lual_loadfilex()`.
     !!
