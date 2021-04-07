@@ -8,7 +8,7 @@ program ut_utility
     use, intrinsic :: iso_fortran_env, only: WP => REAL64, INT64,       &
         stdout => OUTPUT_UNIT
     use, intrinsic :: iso_c_binding, only: c_ptr, c_associated,         &
-        c_null_ptr, c_int
+        c_null_char, c_null_ptr, c_int
     use :: lua
     use :: toast
     implicit none
@@ -26,8 +26,6 @@ program ut_utility
     ! integer(kind=INT64) :: version
 
     type(c_ptr) :: misc_ptr
-    integer :: fsize
-    integer :: csize
     ! integer(kind=INT64) :: ival
     ! real(kind=WP) :: dval
     character(len=:), allocatable :: cval
@@ -77,9 +75,9 @@ program ut_utility
     b_ = 'B'
     c_ = 'C'
     o_ = "O"
-    misc_ptr = lua_pushstring(l, a_)
-    misc_ptr = lua_pushstring(l, b_)
-    misc_ptr = lua_pushstring(l, c_)
+    misc_ptr = lua_pushstring(l, a_ // c_null_char)
+    misc_ptr = lua_pushstring(l, b_ // c_null_char)
+    misc_ptr = lua_pushstring(l, c_ // c_null_char)
 
     call lua_pushvalue(l, 1_c_int)
 
@@ -103,7 +101,7 @@ program ut_utility
     call test%assertequal(waterloo, "ABBA", message="Matched ABBA")
 
     call lua_pop(l, 1)
-    misc_ptr = lua_pushstring(l, o_)
+    misc_ptr = lua_pushstring(l, o_ // c_null_char)
     call lua_copy(l, -1_c_int, 1_c_int)
     call lua_pop(l, 1_c_int)
     call lua_rotate(l, 1_c_int, 1_c_int)
@@ -121,11 +119,7 @@ program ut_utility
     waterloo = ''
     do i = 1, nstack
         misc_ptr = lua_tolstring(l, i, c_null_ptr)
-        csize = c_strlen(misc_ptr)
-
         cval = lua_tostring(l, int(i, c_int))
-        fsize = len(cval)
-        write(unit=stdout, fmt='("Stack(", I0, ") is: """, A, """, length: C = ", I0, ", F = ", I0)') i, cval, csize, fsize
         waterloo = waterloo // cval
     end do
 
