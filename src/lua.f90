@@ -809,6 +809,8 @@ module lua
             integer(kind=c_int)                       :: lua_getuservalue
         end function lua_getuservalue
 
+        !***** Why is this failing to link? MACRO!!!
+
         !> @brief Moves the top element into the given valid index,
         !! shifting up the elements above this index to open space.
         !!
@@ -2058,6 +2060,8 @@ module lua
             !> Pointer to be used as table key
             type(c_ptr),         intent(in), value :: p
         end subroutine lua_rawsetp
+
+        !***** Why won't this link? MACRO!!!!
 
         !> @brief Moves the top element into the given valid index
         !! without shifting any element (therefore replacing the value
