@@ -83,7 +83,7 @@ module lua
     ! lua_Alloc
     ! lua_CFunction - represented as c_funptr
     !* lua_Integer - represented as c_long_long -> INT64
-    ! lua_KContext
+    ! lua_KContext - numeric type of type intptr_t if available, ptrdiff_t otherwise
     ! lua_KFunction - represented as c_funptr
     !* lua_Number  - represented as c_double -> REAL64
     ! lua_Reader - represented as c_funptr
@@ -1594,8 +1594,9 @@ module lua
             integer(kind=c_int),      intent(in), value :: nresults
             !> Stack index of the message handler
             integer(kind=c_int),      intent(in), value :: msgh
-            !> The continuation-function context
-            integer(kind=c_intptr_t), intent(in), value :: ctx
+            !> The continuation-function context (type is c_intptr_t)
+            integer(kind=c_int),      intent(in)        :: ctx
+            ! integer(kind=c_intptr_t), intent(in), value :: ctx
             !> Pointer to continuation-function, for handling yield cases
             type(c_funptr),           intent(in), value :: k
             ! Return value
@@ -1727,9 +1728,9 @@ module lua
         !! top of the stack.
         !!
         !! Any error inside the called function is propagated upwards
-        !! (with a longjmp).
+        !! (with a `longjmp`).
         !!
-        !! C signature: `void lua_callk(lua_State *L, int nargs, int nresults, int ctx, lua_CFunction k)`
+        !! C signature: `void lua_callk(lua_State *L, int nargs, int nresults, lua_KContext ctx, lua_CFunction k)`
         subroutine lua_callk(l, nargs, nresults, ctx, k) bind(c, name='lua_callk')
             import :: c_funptr, c_int, c_intptr_t, c_ptr
             !> Pointer to Lua interpreter state
@@ -1738,8 +1739,9 @@ module lua
             integer(kind=c_int),      intent(in), value :: nargs
             !> Maximum number of results
             integer(kind=c_int),      intent(in), value :: nresults
-            !> The continuation-function context
-            integer(kind=c_intptr_t), intent(in), value :: ctx
+            !> The continuation-function context (type is c_intptr_t)
+            integer(kind=c_int),      intent(in)        :: ctx
+            ! integer(kind=c_intptr_t), intent(in), value :: ctx
             !> Pointer to the continuation-function, for handling yield
             !! cases
             type(c_funptr),           intent(in), value :: k
@@ -2177,23 +2179,6 @@ module lua
             integer(kind=c_int),    intent(in), value :: n
         end subroutine lua_xmove
 
-        !> @brief  Yields a coroutine (thread) with no continuation.
-        !!
-        !! This function is equivalent to `lua_yieldk`, but it
-        !! has no continuation. Therefore, when the thread resumes, it
-        !! continues the function that called the function calling `lua_yield`.
-        !!
-        !! C signature: `int lua_yield (lua_State *L, int nresults)`
-        function lua_yield(l, nresults) bind(c, name='lua_yield')
-            import :: c_funptr, c_int, c_intptr_t, c_ptr
-            !> Pointer to Lua interpreter state
-            type(c_ptr),              intent(in), value :: l
-            !> Maximum number of results
-            integer(kind=c_int),      intent(in), value :: nresults
-            ! Return value
-            integer(kind=c_int)                         :: lua_yield
-        end function lua_yield
-
         !> @brief  Yields a coroutine (thread).
         !!
         !! When a C function calls `lua_yieldk`, the running coroutine
@@ -2234,7 +2219,8 @@ module lua
             !> Maximum number of results
             integer(kind=c_int),      intent(in), value :: nresults
             !> The continuation-function context
-            integer(kind=c_intptr_t), intent(in), value :: ctx
+            integer(kind=c_int),      intent(in) :: ctx
+            ! integer(kind=c_intptr_t), intent(in), value :: ctx
             !> Pointer to the continuation-function
             type(c_funptr),           intent(in), value :: k
             ! Return value
@@ -2775,7 +2761,8 @@ contains
         continue
 
         ! lua_pcall = lua_pcallk(l, nargs, nresults, msgh, int(0, kind=8), c_null_ptr)
-        lua_pcall = lua_pcallk(l, nargs, nresults, msgh, 0_c_lua_integer, c_null_ptr)
+        ! lua_pcall = lua_pcallk(l, nargs, nresults, msgh, 0_c_lua_integer, c_null_ptr)
+        lua_pcall = lua_pcallk(l, nargs, nresults, msgh, 0_c_int, c_null_funptr)
 
         return
     end function lua_pcall
@@ -2980,6 +2967,28 @@ contains
 
         return
     end function lua_version
+
+    !> @brief  Yields a coroutine (thread) with no continuation.
+    !!
+    !! This function is equivalent to `lua_yieldk`, but it
+    !! has no continuation. Therefore, when the thread resumes, it
+    !! continues the function that called the function calling `lua_yield`.
+    !!
+    !! This function replaces a C macro of the same name
+    !!
+    !! C signature: `int lua_yield (lua_State *L, int nresults)`
+    function lua_yield(l, nresults)
+        !> Pointer to Lua interpreter state
+        type(c_ptr),              intent(in) :: l
+        !> Maximum number of results
+        integer(kind=c_int),      intent(in) :: nresults
+        ! Return value
+        integer(kind=c_int)                  :: lua_yield
+        continue
+
+        lua_yield = lua_yieldk(l, nresults, 0_c_int, c_null_funptr)
+
+    end function lua_yield
 
     ! !> @brief Raises an error reporting a problem with argument
     ! !! `arg` of the C function that called it, using a standard
@@ -3304,7 +3313,8 @@ contains
         continue
 
         ! call lua_callk(l, nargs, nresults, int(0, kind=8), c_null_ptr)
-        call lua_callk(l, nargs, nresults, 0_c_lua_integer, c_null_ptr)
+        ! call lua_callk(l, nargs, nresults, 0_c_lua_integer, c_null_ptr)
+        call lua_callk(l, nargs, nresults, 0_c_int, c_null_funptr)
 
         return
     end subroutine lua_call
