@@ -809,22 +809,22 @@ module lua
             integer(kind=c_int)                       :: lua_getuservalue
         end function lua_getuservalue
 
-        !***** Why is this failing to link? MACRO!!!
+        ! !***** Why is this failing to link? MACRO!!!
 
-        !> @brief Moves the top element into the given valid index,
-        !! shifting up the elements above this index to open space.
-        !!
-        !! This function cannot be called with a pseudo-index, because
-        !! a pseudo-index is not an actual stack position.
-        !!
-        !! C signature: `void lua_insert (lua_State *L, int index)`
-        subroutine lua_insert(l, idx) bind(c, name='lua_insert')
-            import :: c_int, c_ptr
-            !> Pointer to Lua interpreter state
-            type(c_ptr),            intent(in), value :: l
-            !> Index of table on stack
-            integer(kind=c_int), intent(in), value    :: idx
-        end subroutine lua_insert
+        ! !> @brief Moves the top element into the given valid index,
+        ! !! shifting up the elements above this index to open space.
+        ! !!
+        ! !! This function cannot be called with a pseudo-index, because
+        ! !! a pseudo-index is not an actual stack position.
+        ! !!
+        ! !! C signature: `void lua_insert (lua_State *L, int index)`
+        ! subroutine lua_insert(l, idx) bind(c, name='lua_insert')
+        !     import :: c_int, c_ptr
+        !     !> Pointer to Lua interpreter state
+        !     type(c_ptr),            intent(in), value :: l
+        !     !> Index of table on stack
+        !     integer(kind=c_int), intent(in), value    :: idx
+        ! end subroutine lua_insert
 
         !> @brief Returns 1 if the value at the given index is a
         !! C function, and 0 otherwise.
@@ -2061,20 +2061,20 @@ module lua
             type(c_ptr),         intent(in), value :: p
         end subroutine lua_rawsetp
 
-        !***** Why won't this link? MACRO!!!!
+        ! !***** Why won't this link? MACRO!!!!
 
-        !> @brief Moves the top element into the given valid index
-        !! without shifting any element (therefore replacing the value
-        !! at that given index), and then pops the top element.
-        !!
-        !! C signature: `void lua_replace (lua_State *L, int index)`
-        subroutine lua_replace(l, idx) bind(c, name='lua_replace')
-            import :: c_int, c_ptr
-            !> Pointer to Lua interpreter state
-            type(c_ptr),         intent(in), value :: l
-            !> Index of element to replace with top stack element
-            integer(kind=c_int), intent(in), value :: idx
-        end subroutine lua_replace
+        ! !> @brief Moves the top element into the given valid index
+        ! !! without shifting any element (therefore replacing the value
+        ! !! at that given index), and then pops the top element.
+        ! !!
+        ! !! C signature: `void lua_replace (lua_State *L, int index)`
+        ! subroutine lua_replace(l, idx) bind(c, name='lua_replace')
+        !     import :: c_int, c_ptr
+        !     !> Pointer to Lua interpreter state
+        !     type(c_ptr),         intent(in), value :: l
+        !     !> Index of element to replace with top stack element
+        !     integer(kind=c_int), intent(in), value :: idx
+        ! end subroutine lua_replace
 
         !> @brief Rotates the stack elements between the valid index
         !! `idx` and the top of the stack.
@@ -2423,6 +2423,25 @@ contains
         return
     end function lua_getfield
 
+    !> @brief Moves the top element into the given valid index,
+    !! shifting up the elements above this index to open space.
+    !!
+    !! This function cannot be called with a pseudo-index, because
+    !! a pseudo-index is not an actual stack position.
+    !!
+    !! C signature: `void lua_insert (lua_State *L, int index)`
+    subroutine lua_insert(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        continue
+
+        call lua_rotate(L, int(idx, kind=c_int), 1_c_int)
+
+        return
+    end subroutine lua_insert
+
     !> @brief Macro replacement that returns whether the stack variable
     !! is boolean.
     !!
@@ -2721,6 +2740,24 @@ contains
 
         return
     end function lua_pcall
+
+    !> @brief Moves the top element into the given valid index
+    !! without shifting any element (therefore replacing the value
+    !! at that given index), and then pops the top element.
+    !!
+    !! C signature: `void lua_replace (lua_State *L, int index)`
+    subroutine lua_replace(l, idx)
+        !> Pointer to Lua interpreter state
+        type(c_ptr), intent(in) :: l
+        !> Index of element to check
+        integer,     intent(in) :: idx
+        continue
+
+        call lua_copy(L, -1_c_int, int(idx, kind=c_int))
+        call lua_pop(L, 1_c_int)
+
+        return
+    end subroutine lua_replace
 
     !> @brief Converts the Fortran string `s` to a number, pushes that
     !! number into the stack, and returns the total size of the string,
